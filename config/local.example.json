@@ -1,6 +1,6 @@
 {
   "e5_model_path": "C:/RAG-ISTAE/storage/models/multilingual-e5-base",
-  "reranker_model_path": "C:/RAG-ISTAE/storage/models/bge-reranker-v2-m3",
+  "reranker_model_path": "C:/RAG-ISTAE/storage/models/bge-reranker-base",
   "qdrant_path": "C:/RAG-ISTAE/storage/vector_store/qdrant",
   "collection_name": "istae_chunks_e5_base",
   "normalize_embeddings": true,
