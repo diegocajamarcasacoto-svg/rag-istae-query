@@ -88,6 +88,38 @@ El reranking se ejecuta por defecto. `--no-rerank` evita tanto cargar BGE como e
 
 La salida distingue candidatos de recuperación y chunks finales. Los tiempos reportan inicialización, cada etapa de consulta y el total; el desglose `context_*` forma parte del tiempo total del builder y no se debe sumar otra vez. El contador de tokens se identifica como estimado salvo que la API reciba un tokenizador real. El pipeline mide comportamiento y coste, no demuestra una mejora en la calidad semántica de respuestas.
 
+## Generación de respuestas con Gemini
+
+El paquete `query.generation` recibe un `ContextResult` ya construido; no ejecuta retrieval, reranking ni consultas a Qdrant. Su configuración JSON y el System Prompt son independientes de `config/local.json` y de `load_config()`. El adaptador usa `google-genai` 1.x de forma diferida; la credencial se obtiene de la variable indicada en `api_key_env` (por defecto `GEMINI_API_KEY`) y nunca se guarda en la configuración.
+
+Copie `config/generation.example.json` a una ruta local, configure el modelo y exporte la clave API en el entorno. `system_prompt_path` se resuelve respecto al archivo JSON:
+
+```python
+from pathlib import Path
+
+from query.generation import generate_answer, load_generation_config
+
+generation_config = load_generation_config(Path("config/generation.json"))
+answer = generate_answer(context_result, generation_config)
+print(answer.answer)
+print(answer.provider_metrics)
+print(answer.context_result.metadata)
+```
+
+El modelo recibe solo la pregunta y `ContextResult.context`, empaquetados como datos JSON; la metadata y los chunks se retienen en `GenerationResult.context_result` para trazabilidad. El System Prompt indica que el contexto es material documental no confiable y que las instrucciones contenidas en él no deben obedecerse. Las métricas de tokens se reportan solo si Gemini las incluye; `application_latency_ms` es una medición local del tiempo de la solicitud. Una llamada real a Gemini requiere credenciales y puede generar costos.
+
+Para ejecutar una pregunta a través del pipeline RAG completo (E5 + recuperación híbrida en Qdrant + reranking BGE + Context Builder + generación Gemini), utilice `scripts/query_rag.py`. Asegúrese de haber instalado `requirements.txt`, de tener la configuración local de E5/Qdrant y de definir `GEMINI_API_KEY` en el entorno. El script usa `config/generation.example.json` por defecto; puede copiarlo a `config/generation.json` y pasar esa ruta explícitamente:
+
+```powershell
+$env:PYTHONPATH = "src;scripts"
+$env:GEMINI_API_KEY = "TU_API_KEY"
+python .\scripts\query_rag.py "¿Qué requisitos establece el artículo 18?"
+python .\scripts\query_rag.py "¿Qué requisitos establece el artículo 18?" --no-rerank --json-output .\rag-result.json
+python .\scripts\query_rag.py "¿Qué reformas aplican?" --generation-config .\config\generation.json
+```
+
+La respuesta se muestra junto con las fuentes del contexto y los tiempos de ejecución. El JSON opcional incluye la respuesta, el contexto y su trazabilidad. Cada ejecución real invoca Gemini y puede generar costos; `--no-rerank` evita cargar BGE, pero no omite los demás pasos.
+
 ## Pruebas y estado de validación
 
 Las pruebas unitarias del Context Builder se pueden ejecutar sin conectar a Qdrant:
@@ -95,6 +127,7 @@ Las pruebas unitarias del Context Builder se pueden ejecutar sin conectar a Qdra
 ```powershell
 $env:PYTHONPATH = "src;scripts"
 python -m unittest discover -s tests -p "test_context_builder.py" -v
+python -m unittest discover -s tests -p "test_generation.py" -v
 ```
 
-Los tests usan mocks y no requieren reindexar ni cambiar la colección. Se verifican selección de semillas, filtros de vecinos, continuidad y límites estructurales, complementarios condicionales, deduplicación, trazabilidad, presupuesto, metadata ausente, tiempos y exportación. La ejecución de pruebas no implica por sí sola una evaluación semántica del contexto.
+Los tests usan mocks/fakes y no requieren conectar con Gemini o Qdrant, reindexar ni cambiar la colección. Se verifican selección de semillas, filtros de vecinos, continuidad y límites estructurales, complementarios condicionales, deduplicación, trazabilidad, presupuesto, metadata ausente, tiempos, exportación y normalización de respuestas del proveedor. La ejecución de pruebas no implica por sí sola una evaluación semántica del contexto ni una solicitud real a Gemini.
