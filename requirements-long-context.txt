@@ -1,0 +1,4 @@
+# Dependencias mínimas de la variante de contexto largo (sin Qdrant ni torch)
+google-genai==2.34.0
+openpyxl==3.1.5
+pytest==8.3.3

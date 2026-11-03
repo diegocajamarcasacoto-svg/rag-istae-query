@@ -1,0 +1,15 @@
+{
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "api_key_env": "GEMINI_API_KEY",
+  "temperature": 0.0,
+  "max_output_tokens": 2048,
+  "use_cache": false,
+  "cache_ttl_seconds": 600,
+  "thinking_budget": null,
+  "timeout_seconds": 300,
+  "max_history_messages": 6,
+  "prompts_dir": "prompts",
+  "catalog": "catalogo_normativo.json",
+  "outputs_dir": "C:/RAG-ISTAE/storage/outputs"
+}

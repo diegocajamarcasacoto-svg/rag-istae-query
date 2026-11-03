@@ -47,11 +47,26 @@ def read_mapping(outputs_dir: Path) -> list[dict[str, str]]:
     return sorted(rows, key=lambda row: row["document_id"])
 
 
-def load_corpus(outputs_dir: Path, catalog: dict[str, DocumentInfo]) -> list[CorpusDocument]:
-    """Lee, limpia y estructura todos los documentos de la ingesta."""
+def load_corpus(
+    outputs_dir: Path,
+    catalog: dict[str, DocumentInfo],
+    only: set[str] | None = None,
+) -> list[CorpusDocument]:
+    """Lee, limpia y estructura los documentos de la ingesta.
+
+    ``only`` limita el corpus a esos ``document_id`` (por ejemplo, para pruebas
+    dentro de los límites de un plan gratuito). Sin ``only`` se carga el corpus completo.
+    """
     outputs_dir = Path(outputs_dir)
     documents: list[CorpusDocument] = []
-    for row in read_mapping(outputs_dir):
+    rows = read_mapping(outputs_dir)
+    if only:
+        wanted = {item.strip().upper() for item in only}
+        unknown = wanted - {row["document_id"] for row in rows}
+        if unknown:
+            raise ValueError(f"Documentos no encontrados en la ingesta: {', '.join(sorted(unknown))}")
+        rows = [row for row in rows if row["document_id"] in wanted]
+    for row in rows:
         document_id = row["document_id"]
         text_path = outputs_dir / "extracted_text" / f"{row['source_sha256']}.txt"
         raw = text_path.read_text(encoding="utf-8")

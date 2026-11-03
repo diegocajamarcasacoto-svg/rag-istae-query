@@ -1,0 +1,61 @@
+"""Utilidades compartidas por los scripts de contexto largo."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from query.long_context.catalog import load_catalog  # noqa: E402
+from query.long_context.corpus import load_corpus  # noqa: E402
+from query.long_context.settings import LongContextSettings, build_client, load_settings  # noqa: E402
+from query.long_context.variant import LongContextVariant  # noqa: E402
+
+DEFAULT_SETTINGS = ROOT / "config" / "long_context.json"
+
+
+def run(main) -> int:
+    """Ejecuta un script mostrando errores de configuración como mensajes legibles."""
+    from query.long_context.providers.gemini import GeminiConfigurationError
+
+    try:
+        return main()
+    except (GeminiConfigurationError, FileNotFoundError, KeyError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        if isinstance(exc, GeminiConfigurationError) and "variable de entorno" in str(exc):
+            print('Configure la clave en PowerShell con: setx GEMINI_API_KEY "su_clave" y abra una terminal nueva.', file=sys.stderr)
+        return 2
+
+
+def parse_documents(value: str | None) -> set[str] | None:
+    if not value:
+        return None
+    return {item.strip().upper() for item in value.split(",") if item.strip()}
+
+
+def build_variants(
+    settings_path: Path,
+    variants: list[str],
+    documents: set[str] | None,
+) -> tuple[LongContextSettings, object, dict[str, LongContextVariant]]:
+    settings = load_settings(settings_path)
+    catalog, relations, meta = load_catalog(settings.catalog) if settings.catalog.exists() else ({}, [], {})
+    corpus = load_corpus(settings.outputs_dir, catalog, documents)
+    client = build_client(settings)
+    built = {
+        name: LongContextVariant(
+            corpus,
+            name,
+            client,
+            settings.prompts_dir,
+            relations,
+            meta.get("rank_labels", {}),
+            temperature=settings.temperature,
+            max_output_tokens=settings.max_output_tokens,
+            max_history_messages=settings.max_history_messages,
+        )
+        for name in variants
+    }
+    return settings, client, built
