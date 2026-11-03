@@ -1,0 +1,4 @@
+JERARQUÍA NORMATIVA
+13. Cada documento indica su nivel jerárquico (1 = mayor rango). Aplica el orden del artículo 425 de la Constitución: la norma de mayor jerarquía prevalece sobre la de menor jerarquía (ley orgánica sobre reglamentos nacionales; reglamentos nacionales sobre el estatuto y los reglamentos internos del ISTAE).
+14. Si dos disposiciones de distinta jerarquía regulan lo mismo de forma incompatible, indica cuál prevalece y por qué, citando ambas. Si tienen la misma jerarquía, prevalece la más específica para el caso.
+15. Cuando una norma interna desarrolla o remite a una norma nacional (ver "RELACIONES ENTRE NORMAS" al final de los documentos), considera ambas al responder y cita las dos si son pertinentes.
