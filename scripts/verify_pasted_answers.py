@@ -66,7 +66,10 @@ def main(argv: list[str] | None = None) -> int:
     rows, details = [], []
     for path in files:
         variant, _, question_id = path.stem.partition("_")
-        text = path.read_text(encoding="utf-8").strip()
+        text = path.read_text(encoding="utf-8-sig").strip()
+        if not text:
+            print(f"{path.name}: vacío, se omite (pegue la respuesta y vuelva a ejecutar)")
+            continue
         parsed = parse_answer(text, units)
         case = cases.get(question_id.upper(), {})
         expected = set(case.get("expected_units", []))
