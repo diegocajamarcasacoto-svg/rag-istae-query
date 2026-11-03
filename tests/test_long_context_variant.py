@@ -171,3 +171,10 @@ class CitationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QuoteStartingWithLiteralTests(unittest.TestCase):
+    def test_quote_that_opens_with_a_literal(self) -> None:
+        units = {"INT08-art11": ("INT08", "Documentos:\n\n- a) Certificados de matrículas.\n- b) Record académico de la carrera.")}
+        text = "X [INT08-art11].\n\nFuentes:\n- [INT08-art11] «a) Certificados de matrículas. b) Record académico de la carrera.»"
+        self.assertTrue(parse_answer(text, units).citations[0].quote_verified)
