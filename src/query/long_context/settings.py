@@ -40,7 +40,7 @@ def _path(base: Path, value: str) -> Path:
 
 def load_settings(path: Path) -> LongContextSettings:
     path = Path(path).expanduser().resolve()
-    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8-sig"))  # acepta BOM (Bloc de notas)
     missing = [key for key in ("provider", "model", "outputs_dir") if not data.get(key)]
     if missing:
         raise KeyError(f"Faltan claves en {path.name}: {', '.join(missing)}")
