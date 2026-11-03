@@ -157,6 +157,11 @@ class CitationTests(unittest.TestCase):
         text = "X [INT08-art12].\n\nFuentes:\n- [INT08-art12] «Requisitos: a) Declaratoria de aptitud. b) Nivel A1 en técnico.»"
         self.assertTrue(parse_answer(text, units).citations[0].quote_verified)
 
+    def test_quote_keeps_inline_list_number_from_source(self) -> None:
+        units = {"INT08-art75": ("INT08", "Podrá solicitar cambio de opción:\n\n1. Por una sola ocasión por fuerza mayor.")}
+        text = "X [INT08-art75].\n\nFuentes:\n- [INT08-art75] «Podrá solicitar cambio de opción: 1. Por una sola ocasión por fuerza mayor.»"
+        self.assertTrue(parse_answer(text, units).citations[0].quote_verified)
+
     def test_detects_abstention_and_citations_without_source(self) -> None:
         self.assertTrue(parse_answer("No encontré en la normativa disponible información sobre becas.", self.UNITS).abstained)
         parsed = parse_answer("Algo [INT08-art12].", self.UNITS)

@@ -28,10 +28,14 @@ def run(main) -> int:
         return main()
     except Exception as exc:  # noqa: BLE001 - se reclasifica abajo
         if genai_errors is not None and isinstance(exc, genai_errors.ClientError) and getattr(exc, "code", None) == 429:
-            print("Error 429: se superó el límite de uso del proveedor (cuota por minuto o por día).", file=sys.stderr)
-            print("En el plan gratuito de Gemini el límite es de 250.000 tokens de entrada por minuto: el corpus "
-                  "completo (~781.000) no cabe en una consulta. Use --documents con pocos documentos o un plan de pago.",
-                  file=sys.stderr)
+            print("Error 429: se superó un límite de uso del proveedor.", file=sys.stderr)
+            if "CachedContentStorage" in str(exc):
+                print("La caché explícita no está disponible en el plan gratuito de esta cuenta (límite 0). "
+                      "Ejecute sin --use-cache: Gemini aplica caché implícita automáticamente.", file=sys.stderr)
+            else:
+                print("En el plan gratuito de Gemini el límite es de 250.000 tokens de entrada por minuto: el corpus "
+                      "completo (~781.000) no cabe en una consulta. Use --documents con pocos documentos o un plan de pago.",
+                      file=sys.stderr)
             print(f"Detalle: {str(exc)[:300]}", file=sys.stderr)
             return 3
         if not isinstance(exc, (GeminiConfigurationError, FileNotFoundError, KeyError, ValueError)):
@@ -73,8 +77,13 @@ def build_variants(
     settings_path: Path,
     variants: list[str],
     documents: set[str] | None,
+    overrides: dict | None = None,
 ) -> tuple[LongContextSettings, object, dict[str, LongContextVariant]]:
+    import dataclasses
+
     settings = load_settings(settings_path)
+    if overrides:
+        settings = dataclasses.replace(settings, **overrides)
     catalog, relations, meta = load_catalog(settings.catalog) if settings.catalog.exists() else ({}, [], {})
     corpus = load_corpus(settings.outputs_dir, catalog, documents)
     client = build_client(settings)

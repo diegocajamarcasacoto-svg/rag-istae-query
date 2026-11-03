@@ -1,0 +1,18 @@
+[
+  {
+    "id": "CACHE-1",
+    "question": "¿Puedo hacer el trabajo de integración curricular con un compañero y cuál es la nota mínima para aprobarlo?",
+    "variant": "A",
+    "documents": ["INT08", "EXT01"],
+    "expected_units": ["INT08-art19", "INT08-art20"],
+    "answerable": true
+  },
+  {
+    "id": "CACHE-2",
+    "question": "¿Cuánto tiempo tengo para terminar y defender mi trabajo de integración curricular y qué pasa si no lo logro?",
+    "variant": "A",
+    "documents": ["INT08", "EXT01"],
+    "expected_units": ["INT08-art44", "INT08-art75"],
+    "answerable": true
+  }
+]

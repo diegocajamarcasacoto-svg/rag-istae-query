@@ -56,6 +56,9 @@ class ParsedAnswer:
 def normalize_for_match(text: str) -> str:
     """Normaliza para comparar citas: sin viñetas, marcas de formato, comillas ni tildes, espacios simples."""
     text = re.sub(r"(?m)^\s*(?:[-*•]|\d+[.)])\s+", " ", text)  # viñetas y numeración de listas
+    # Marcadores de lista dentro de la frase ("…titulación: 1. Por una sola…", "a) Declaratoria"):
+    # se quitan en la cita y en la unidad por igual, así la comparación es simétrica.
+    text = re.sub(r"(?<!\S)(?:\d{1,2}[.)]|[a-zñ]\))(?=\s)", " ", text, flags=re.IGNORECASE)
     text = text.replace("**", "").replace("«", "").replace("»", "").replace("“", "").replace("”", "").replace('"', "")
     decomposed = unicodedata.normalize("NFKD", text.casefold())
     text = "".join(ch for ch in decomposed if not unicodedata.combining(ch))

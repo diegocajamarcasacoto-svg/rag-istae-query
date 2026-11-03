@@ -1,0 +1,50 @@
+[
+  {
+    "id": "Q01-AJ",
+    "question": "¿Qué requisitos necesito cumplir para que me declaren egresado y luego poder titularme en el ISTAE?",
+    "variant": "AJ",
+    "documents": ["INT08", "EXT01"],
+    "expected_units": ["INT08-art12", "INT08-art13"],
+    "answerable": true
+  },
+  {
+    "id": "Q02",
+    "question": "¿Puedo hacer el trabajo de integración curricular con un compañero y cuál es la nota mínima para aprobarlo?",
+    "variant": "A",
+    "documents": ["INT08"],
+    "expected_units": ["INT08-art19", "INT08-art20"],
+    "answerable": true
+  },
+  {
+    "id": "Q05",
+    "question": "Saqué 5,50 de promedio en una materia, ¿puedo dar el examen de recuperación y cómo se calcula mi nota final?",
+    "variant": "A",
+    "documents": ["INT07"],
+    "expected_units": ["INT07-art38"],
+    "answerable": true
+  },
+  {
+    "id": "Q15",
+    "question": "¿Qué pasa si repruebo por tercera vez la misma asignatura?",
+    "variant": "A",
+    "documents": ["EXT02", "EXT01"],
+    "expected_units": ["EXT02-art74", "EXT01-art84"],
+    "answerable": true
+  },
+  {
+    "id": "Q27-AJ",
+    "question": "Hice prácticas hace 7 años, ¿todavía me las pueden convalidar?",
+    "variant": "AJ",
+    "documents": ["EXT02", "INT15"],
+    "expected_units": ["EXT02-art43", "INT15-art22"],
+    "answerable": true
+  },
+  {
+    "id": "SIN-RESPUESTA",
+    "question": "¿Cuál es el horario de atención de la biblioteca del ISTAE los sábados?",
+    "variant": "A",
+    "documents": ["INT08", "INT07"],
+    "expected_units": [],
+    "answerable": false
+  }
+]
