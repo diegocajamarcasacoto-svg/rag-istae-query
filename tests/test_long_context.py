@@ -107,6 +107,13 @@ class StructureTests(unittest.TestCase):
         self.assertNotIn("INT09-art87", titles)
 
 
+class BoldPlacementTests(unittest.TestCase):
+    def test_bold_opening_between_keyword_and_number_is_detected(self) -> None:
+        text = "**Artículo 1.** Uno.\n\n**Artículo 2.** Dos.\n\nArtículo **3. Declaratoria de Aptitud.** Texto."
+        ids = [unit.unit_id for unit in parse_document("INT08", text).units]
+        self.assertIn("INT08-art3", ids)
+
+
 class NumberingGapTests(unittest.TestCase):
     def test_confirmed_jump_is_accepted_and_reported(self) -> None:
         text = "Art. 1.- Uno.\nArt. 2.- Dos.\nArt. 3.- Tres.\nArt. 9.- Nueve.\nArt. 10.- Diez."

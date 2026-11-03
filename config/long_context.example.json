@@ -3,7 +3,7 @@
   "model": "gemini-3.6-flash",
   "api_key_env": "GEMINI_API_KEY",
   "temperature": 0.0,
-  "max_output_tokens": 2048,
+  "max_output_tokens": 8192,
   "use_cache": false,
   "cache_ttl_seconds": 600,
   "thinking_budget": null,

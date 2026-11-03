@@ -31,7 +31,9 @@ MAX_ARTICLE_GAP = 5
 MIN_ARTICLES_FOR_ARTICULATED = 3
 
 _ARTICLE = re.compile(
-    r"^\s*(?:[-*>]\s+)?(?:#{1,6}\s*)?(?:\*\*)?\s*(?:art[íi]culo|art\.)\s*"
+    # La negrita puede abrir antes de "Artículo" o entre la palabra y el número
+    # (p. ej. "Artículo **11. Declaratoria…**" en INT08).
+    r"^\s*(?:[-*>]\s+)?(?:#{1,6}\s*)?(?:\*\*)?\s*(?:art[íi]culo|art\.)\s*(?:\*\*)?\s*"
     r"(?P<num>\d+(?:\.\d+)?(?:[-–]\s*[a-z]\b|\s+(?:bis|ter|quater)\b)?|innumerado|[úu]nico)",
     re.IGNORECASE,
 )

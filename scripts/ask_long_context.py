@@ -29,7 +29,11 @@ def _print_answer(answer: Answer) -> None:
         print(f"Citados sin cita textual en 'Fuentes': {', '.join(answer.cited_without_source)}")
     print("\n=== USO ===")
     print(f"Variante: {answer.variant_name} · modelo: {answer.model} · versión de corpus: {answer.corpus_version}")
-    print(f"Tokens: entrada={answer.input_tokens} (en caché={answer.cached_input_tokens}) · salida={answer.output_tokens}")
+    print(f"Tokens: entrada={answer.input_tokens} (en caché={answer.cached_input_tokens}) · salida={answer.output_tokens}"
+          f" · razonamiento={answer.extra.get('thoughts_tokens')}")
+    if answer.finish_reason == "MAX_TOKENS":
+        print("AVISO: la respuesta se cortó por el límite de salida (incluye el razonamiento del modelo). "
+              "Suba max_output_tokens en la configuración.")
     print(f"Latencia: {answer.latency_ms / 1000:.1f} s · motivo de fin: {answer.finish_reason}")
     if answer.extra.get("model_mismatch"):
         print(f"AVISO: se pidió {answer.extra.get('requested_model')} pero respondió {answer.model}. "
@@ -101,7 +105,7 @@ def _markdown(answer: Answer, documents: str | None) -> str:
         "## Uso",
         "",
         f"- Tokens de entrada: {answer.input_tokens} (en caché: {answer.cached_input_tokens})",
-        f"- Tokens de salida: {answer.output_tokens}",
+        f"- Tokens de salida: {answer.output_tokens} · tokens de razonamiento: {answer.extra.get('thoughts_tokens')}",
         f"- Latencia: {answer.latency_ms / 1000:.1f} s · motivo de fin: {answer.finish_reason}",
     ]
     if answer.extra.get("model_mismatch"):

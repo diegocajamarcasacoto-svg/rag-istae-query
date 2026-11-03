@@ -21,8 +21,21 @@ def run(main) -> int:
     from query.long_context.providers.gemini import GeminiConfigurationError
 
     try:
+        from google.genai import errors as genai_errors
+    except ImportError:  # pragma: no cover - el SDK no está instalado
+        genai_errors = None
+    try:
         return main()
-    except (GeminiConfigurationError, FileNotFoundError, KeyError, ValueError) as exc:
+    except Exception as exc:  # noqa: BLE001 - se reclasifica abajo
+        if genai_errors is not None and isinstance(exc, genai_errors.ClientError) and getattr(exc, "code", None) == 429:
+            print("Error 429: se superó el límite de uso del proveedor (cuota por minuto o por día).", file=sys.stderr)
+            print("En el plan gratuito de Gemini el límite es de 250.000 tokens de entrada por minuto: el corpus "
+                  "completo (~781.000) no cabe en una consulta. Use --documents con pocos documentos o un plan de pago.",
+                  file=sys.stderr)
+            print(f"Detalle: {str(exc)[:300]}", file=sys.stderr)
+            return 3
+        if not isinstance(exc, (GeminiConfigurationError, FileNotFoundError, KeyError, ValueError)):
+            raise
         print(f"Error: {exc}", file=sys.stderr)
         if isinstance(exc, GeminiConfigurationError) and "variable de entorno" in str(exc):
             print('Configure la clave en PowerShell con: setx GEMINI_API_KEY "su_clave" y abra una terminal nueva.', file=sys.stderr)
