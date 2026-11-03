@@ -11,11 +11,10 @@ margen para la pregunta y la respuesta. Contar tokens no genera respuestas.
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from _long_context_cli import DEFAULT_SETTINGS, build_variants, parse_documents, run
+from _long_context_cli import DEFAULT_SETTINGS, build_variants, parse_documents, run, save_results
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,7 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--variants", nargs="+", default=["A", "AJ"], choices=["A", "AJ"])
     parser.add_argument("--documents", help="Lista de document_id separada por comas (corpus reducido).")
     parser.add_argument("--margin", type=float, default=0.05, help="Fracción de la ventana reservada (por defecto 5 %%).")
-    parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--json-output", type=Path, help="Ruta alternativa (por defecto: carpeta de resultados con fecha y hora).")
     args = parser.parse_args(argv)
 
     settings, client, variants = build_variants(args.settings, args.variants, parse_documents(args.documents))
@@ -54,10 +53,22 @@ def main(argv: list[str] | None = None) -> int:
         }
         verdict = "sin dato de ventana" if fits is None else ("CABE" if fits else "NO CABE")
         print(f"  {name}: {tokens:,} tokens ({chars:,} caracteres, {chars / tokens:.2f} car./token) → {verdict}")
-    if args.json_output:
-        args.json_output.parent.mkdir(parents=True, exist_ok=True)
-        args.json_output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Informe: {args.json_output}")
+    lines = [
+        "# Conteo de tokens del corpus de contexto largo",
+        "",
+        f"- Fecha (UTC): {report['generated_at_utc']}",
+        f"- Modelo: {settings.model}",
+        f"- Ventana de entrada informada por la API: {window if window else 'no disponible'} tokens (margen reservado {args.margin:.0%})",
+        f"- Documentos: {report['documents'] if isinstance(report['documents'], str) else ', '.join(report['documents'])}",
+        "",
+        "| Variante | Tokens | Caracteres | Caracteres por token | ¿Cabe? |",
+        "|---|---:|---:|---:|---|",
+    ]
+    for name, row in report["variants"].items():
+        verdict = "sin dato" if row["fits"] is None else ("Sí" if row["fits"] else "No")
+        lines.append(f"| {name} | {row['tokens']:,} | {row['context_chars']:,} | {row['chars_per_token']} | {verdict} |")
+    json_path, md_path = save_results(settings.results_dir, "tokens", report, "\n".join(lines) + "\n", args.json_output)
+    print(f"\nResultados guardados en:\n  {md_path}\n  {json_path}")
     return 0
 
 

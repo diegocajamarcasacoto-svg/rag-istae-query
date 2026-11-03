@@ -11,10 +11,9 @@ Cada ejecución consume tokens del proveedor.
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
-from _long_context_cli import DEFAULT_SETTINGS, build_variants, parse_documents, run
+from _long_context_cli import DEFAULT_SETTINGS, build_variants, parse_documents, run, save_results
 from query.long_context.variant import Answer
 
 
@@ -44,10 +43,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--variant", default="A", choices=["A", "AJ"])
     parser.add_argument("--documents", help="Lista de document_id separada por comas (corpus reducido).")
     parser.add_argument("--stream", action="store_true", help="Muestra la respuesta a medida que llega.")
-    parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--json-output", type=Path, help="Ruta alternativa (por defecto: carpeta de resultados con fecha y hora).")
     args = parser.parse_args(argv)
 
-    _, client, variants = build_variants(args.settings, [args.variant], parse_documents(args.documents))
+    settings, client, variants = build_variants(args.settings, [args.variant], parse_documents(args.documents))
     variant = variants[args.variant]
     try:
         print("=== RESPUESTA ===")
@@ -68,11 +67,46 @@ def main(argv: list[str] | None = None) -> int:
             close()
 
     _print_answer(answer)
-    if args.json_output:
-        args.json_output.parent.mkdir(parents=True, exist_ok=True)
-        args.json_output.write_text(json.dumps(answer.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Resultado: {args.json_output}")
+    json_path, md_path = save_results(
+        settings.results_dir, f"respuesta_{args.variant}", answer.to_dict(), _markdown(answer, args.documents), args.json_output
+    )
+    print(f"\nResultados guardados en:\n  {md_path}\n  {json_path}")
     return 0
+
+
+def _markdown(answer: Answer, documents: str | None) -> str:
+    rows = []
+    for c in answer.citations:
+        quote = {True: "verificada", False: "NO encontrada", None: "sin cita textual"}[c.quote_verified]
+        rows.append(f"| [{c.unit_id}] | {'Sí' if c.known else 'No'} | {quote} |")
+    lines = [
+        f"# Respuesta · {answer.variant_name}",
+        "",
+        f"**Pregunta:** {answer.question}",
+        "",
+        f"Modelo: {answer.model} · corpus: {documents or 'completo'} · versión de corpus: {answer.corpus_version}",
+        "",
+        "## Respuesta",
+        "",
+        answer.text,
+        "",
+        "## Verificación de citas",
+        "",
+        "| Cita | ¿Existe en el corpus? | Cita textual |",
+        "|---|---|---|",
+        *(rows or ["| — | — | — |"]),
+        "",
+        f"Abstención: {'Sí' if answer.abstained else 'No'} · citas sin cita textual: {', '.join(answer.cited_without_source) or 'ninguna'}",
+        "",
+        "## Uso",
+        "",
+        f"- Tokens de entrada: {answer.input_tokens} (en caché: {answer.cached_input_tokens})",
+        f"- Tokens de salida: {answer.output_tokens}",
+        f"- Latencia: {answer.latency_ms / 1000:.1f} s · motivo de fin: {answer.finish_reason}",
+    ]
+    if answer.extra.get("model_mismatch"):
+        lines.append(f"- AVISO: se pidió {answer.extra.get('requested_model')} y respondió {answer.model}")
+    return "\n".join(lines) + "\n"
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ class LongContextSettings:
     prompts_dir: Path
     catalog: Path
     outputs_dir: Path
+    results_dir: Path
 
 
 def _path(base: Path, value: str) -> Path:
@@ -44,6 +45,9 @@ def load_settings(path: Path) -> LongContextSettings:
         raise KeyError(f"Faltan claves en {path.name}: {', '.join(missing)}")
     base = path.parent
     budget = data.get("thinking_budget")
+    outputs_dir = _path(base, data["outputs_dir"])
+    # Por defecto los resultados quedan junto a los corpus: <outputs>/long_context/resultados
+    results_dir = _path(base, data["results_dir"]) if data.get("results_dir") else outputs_dir / "long_context" / "resultados"
     return LongContextSettings(
         provider=str(data["provider"]).strip().lower(),
         model=str(data["model"]).strip(),
@@ -57,7 +61,8 @@ def load_settings(path: Path) -> LongContextSettings:
         max_history_messages=int(data.get("max_history_messages", 6)),
         prompts_dir=_path(base, data.get("prompts_dir", "prompts")),
         catalog=_path(base, data.get("catalog", "catalogo_normativo.json")),
-        outputs_dir=_path(base, data["outputs_dir"]),
+        outputs_dir=outputs_dir,
+        results_dir=results_dir,
     )
 
 

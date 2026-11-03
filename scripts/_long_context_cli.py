@@ -29,6 +29,27 @@ def run(main) -> int:
         return 2
 
 
+def save_results(results_dir: Path, name: str, data: dict, markdown: str, override: Path | None = None) -> tuple[Path, Path]:
+    """Guarda el resultado en JSON (para análisis) y en Markdown (para leer).
+
+    Sin ``override``, los archivos se nombran con fecha y hora en ``results_dir``,
+    así ninguna ejecución sobrescribe a otra.
+    """
+    import json
+    from datetime import datetime
+
+    if override:
+        json_path = Path(override).expanduser().resolve()
+    else:
+        stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        json_path = (Path(results_dir) / f"{name}_{stamp}.json").resolve()
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    md_path = json_path.with_suffix(".md")
+    md_path.write_text(markdown, encoding="utf-8")
+    return json_path, md_path
+
+
 def parse_documents(value: str | None) -> set[str] | None:
     if not value:
         return None
