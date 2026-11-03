@@ -19,11 +19,12 @@ class LongContextSettings:
     provider: str
     model: str
     api_key_env: str
-    temperature: float
+    temperature: float | None
     max_output_tokens: int
     use_cache: bool
     cache_ttl_seconds: int
     thinking_budget: int | None
+    thinking_level: str | None
     timeout_seconds: float
     max_history_messages: int
     prompts_dir: Path
@@ -52,11 +53,13 @@ def load_settings(path: Path) -> LongContextSettings:
         provider=str(data["provider"]).strip().lower(),
         model=str(data["model"]).strip(),
         api_key_env=str(data.get("api_key_env", "GEMINI_API_KEY")),
-        temperature=float(data.get("temperature", 0.0)),
+        # null = valor por defecto del modelo (recomendado por Google para Gemini 3).
+        temperature=None if data.get("temperature") is None else float(data["temperature"]),
         max_output_tokens=int(data.get("max_output_tokens", 2048)),
         use_cache=bool(data.get("use_cache", False)),
         cache_ttl_seconds=int(data.get("cache_ttl_seconds", 600)),
         thinking_budget=None if budget is None else int(budget),
+        thinking_level=data.get("thinking_level") or None,
         timeout_seconds=float(data.get("timeout_seconds", 300)),
         max_history_messages=int(data.get("max_history_messages", 6)),
         prompts_dir=_path(base, data.get("prompts_dir", "prompts")),
@@ -76,6 +79,8 @@ def build_client(settings: LongContextSettings) -> LLMClient:
             use_cache=settings.use_cache,
             cache_ttl_seconds=settings.cache_ttl_seconds,
             thinking_budget=settings.thinking_budget,
+            thinking_level=settings.thinking_level,
+            send_temperature=settings.temperature is not None,
             timeout_seconds=settings.timeout_seconds,
         )
     raise ValueError(f"Proveedor no implementado: {settings.provider!r}")

@@ -39,9 +39,17 @@ class GeminiClient:
         use_cache: bool = False,
         cache_ttl_seconds: int = 600,
         thinking_budget: int | None = None,
+        thinking_level: str | None = None,
+        send_temperature: bool = True,
         timeout_seconds: float = 300,
         client: Any | None = None,
     ) -> None:
+        if thinking_budget is not None and thinking_level is not None:
+            raise GeminiConfigurationError("Use thinking_level o thinking_budget, no ambos (la API rechaza la combinación).")
+        # Gemini 3: Google recomienda no cambiar la temperatura (1.0 por defecto);
+        # con send_temperature=False se usa el valor por defecto del modelo.
+        self.thinking_level = thinking_level
+        self.send_temperature = send_temperature
         if not model or not model.strip():
             raise GeminiConfigurationError("Debe indicar el nombre exacto del modelo de Gemini.")
         self.model = model.strip()
@@ -91,6 +99,8 @@ class GeminiClient:
         return items
 
     def _thinking(self) -> Any | None:
+        if self.thinking_level is not None:
+            return self._types().ThinkingConfig(thinking_level=self.thinking_level)
         if self.thinking_budget is None:
             return None
         return self._types().ThinkingConfig(thinking_budget=self.thinking_budget)
@@ -112,10 +122,9 @@ class GeminiClient:
 
     def generation_config(self, request: LLMRequest) -> Any:
         types = self._types()
-        options: dict[str, Any] = {
-            "temperature": request.temperature,
-            "max_output_tokens": request.max_output_tokens,
-        }
+        options: dict[str, Any] = {"max_output_tokens": request.max_output_tokens}
+        if self.send_temperature:
+            options["temperature"] = request.temperature
         thinking = self._thinking()
         if thinking is not None:
             options["thinking_config"] = thinking

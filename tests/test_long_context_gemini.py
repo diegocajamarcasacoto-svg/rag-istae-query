@@ -154,3 +154,16 @@ class ModelMismatchTests(unittest.TestCase):
         self.assertTrue(response.extra["model_mismatch"])
         response = GeminiClient("gemini-x", client=FakeSDK()).generate(make_request())
         self.assertFalse(response.extra["model_mismatch"])
+
+
+class Gemini3SettingsTests(unittest.TestCase):
+    def test_default_temperature_and_thinking_level(self) -> None:
+        sdk = FakeSDK()
+        GeminiClient("gemini-test", client=sdk, send_temperature=False, thinking_level="medium").generate(make_request())
+        config = sdk.models.calls[-1][1]["config"]
+        self.assertIsNone(config.temperature)
+        self.assertEqual(str(config.thinking_config.thinking_level).lower().split(".")[-1], "medium")
+
+    def test_level_and_budget_together_are_rejected(self) -> None:
+        with self.assertRaises(GeminiConfigurationError):
+            GeminiClient("gemini-test", thinking_budget=100, thinking_level="low")
