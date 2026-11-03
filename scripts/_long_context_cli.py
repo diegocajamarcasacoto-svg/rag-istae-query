@@ -19,6 +19,7 @@ DEFAULT_SETTINGS = ROOT / "config" / "long_context.json"
 def run(main) -> int:
     """Ejecuta un script mostrando errores de configuración como mensajes legibles."""
     from query.long_context.providers.gemini import GeminiConfigurationError
+    from query.long_context.providers.openai_compatible import OpenAICompatibleError
 
     try:
         from google.genai import errors as genai_errors
@@ -38,6 +39,14 @@ def run(main) -> int:
                       file=sys.stderr)
             print(f"Detalle: {str(exc)[:300]}", file=sys.stderr)
             return 3
+        if isinstance(exc, OpenAICompatibleError):
+            print(f"Error del proveedor: {str(exc)[:600]}", file=sys.stderr)
+            if exc.status_code == 429:
+                print("Límite de uso alcanzado (los modelos :free de OpenRouter permiten pocas solicitudes por "
+                      "minuto y por día). Espere y vuelva a intentar.", file=sys.stderr)
+            elif "variable de entorno" in str(exc):
+                print("Configure la clave como variable de entorno de usuario y abra una terminal nueva.", file=sys.stderr)
+            return 3 if exc.status_code == 429 else 2
         if not isinstance(exc, (GeminiConfigurationError, FileNotFoundError, KeyError, ValueError)):
             raise
         print(f"Error: {exc}", file=sys.stderr)

@@ -209,3 +209,16 @@ class CorpusTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InlineArticleTests(unittest.TestCase):
+    def test_article_glued_to_previous_paragraph_is_split(self) -> None:
+        from query.long_context.structure import parse_document
+
+        text = ("Artículo 1.- Ámbito.- Texto uno.\n\nArtículo 2.- Objeto.- Texto dos.\n\n"
+                "Artículo 3.- Reconocimiento.- Evitar dos mallas vigentes. Artículo 4.- Homologación.- Hasta diez (10) años.\n\n"
+                "Artículo 5.- Validación.- Según el artículo 4 de este reglamento.")
+        ids = [u.unit_id for u in parse_document("EXT02", text).units]
+        self.assertEqual(ids, ["EXT02-art1", "EXT02-art2", "EXT02-art3", "EXT02-art4", "EXT02-art5"])
+        art4 = parse_document("EXT02", text).units[3].text
+        self.assertTrue(art4.startswith("Artículo 4.- Homologación"))

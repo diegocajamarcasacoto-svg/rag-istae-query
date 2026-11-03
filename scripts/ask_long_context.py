@@ -27,6 +27,11 @@ def _print_answer(answer: Answer) -> None:
         print(f"- [{citation.unit_id}] {status}; {quote}")
     if answer.cited_without_source:
         print(f"Citados sin cita textual en 'Fuentes': {', '.join(answer.cited_without_source)}")
+    if answer.external_sources:
+        print(f"AVISO: fuentes externas no permitidas: {', '.join(answer.external_sources)}")
+    if answer.sources_text:
+        print("\n=== FUENTES (nombres oficiales del catálogo) ===")
+        print(answer.sources_text)
     print("\n=== USO ===")
     print(f"Variante: {answer.variant_name} · modelo: {answer.model} · versión de corpus: {answer.corpus_version}")
     print(f"Tokens: entrada={answer.input_tokens} (en caché={answer.cached_input_tokens}) · salida={answer.output_tokens}"

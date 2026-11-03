@@ -1,0 +1,6 @@
+Antes de responder, recuerda el formato obligatorio:
+- Cita cada afirmación con su identificador entre corchetes, copiado exactamente del documento, por ejemplo [INT08-art12]. No escribas referencias como "(EXT02, Art. 74)" ni rangos de artículos.
+- Usa solo identificadores que aparecen en los documentos.
+- Termina con "Fuentes:", agrupando por documento: una línea con el nombre del documento tal como aparece en su encabezado y su código entre paréntesis, y debajo "- [IDENTIFICADOR] «frase copiada literalmente del artículo»" por cada identificador que usaste.
+- Ninguna fuente externa (páginas web, URL).
+- Si no hay información suficiente, empieza con "No encontré en la normativa disponible".

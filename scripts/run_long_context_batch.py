@@ -68,11 +68,15 @@ def _answer_with_retry(variant, question: str):
         from google.genai import errors as genai_errors
     except ImportError:  # pragma: no cover
         genai_errors = None
+    from query.long_context.providers.openai_compatible import OpenAICompatibleError
+
     try:
         return variant.answer(question)
     except Exception as exc:  # noqa: BLE001
-        if (genai_errors is not None and isinstance(exc, genai_errors.ClientError) and getattr(exc, "code", None) == 429
-                and "CachedContentStorage" not in str(exc)):  # el límite de caché no se resuelve esperando
+        gemini_429 = (genai_errors is not None and isinstance(exc, genai_errors.ClientError)
+                      and getattr(exc, "code", None) == 429)
+        openai_429 = isinstance(exc, OpenAICompatibleError) and exc.status_code == 429
+        if (gemini_429 or openai_429) and "CachedContentStorage" not in str(exc):  # el límite de caché no se resuelve esperando  # el límite de caché no se resuelve esperando
             delay = _retry_delay(exc)
             print(f"    429: esperando {delay:.0f} s y reintentando una vez…")
             time.sleep(delay)
@@ -92,6 +96,8 @@ def evaluate(answer: Answer, case: dict) -> dict:
         "valid_citation_ratio": (len(known) / len(answer.citations)) if answer.citations else None,
         "verified_quote_ratio": (sum(1 for c in checked if c.quote_verified) / len(checked)) if checked else None,
         "invented_ids": answer.unknown_citations,
+        "external_sources": answer.external_sources,
+        "cited_without_source": answer.cited_without_source,
         "abstained": answer.abstained,
         "abstention_correct": (answer.abstained == (not answerable)),
     }
@@ -119,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     throttle = TokenThrottle(args.tpm_limit or None)
     overrides = {"use_cache": True} if args.use_cache else None
     results = []
+    failures: list[dict] = []
     settings = None
     # Las preguntas con la misma variante y el mismo corpus comparten cliente y
     # variante: así reutilizan la caché, que se elimina recién al final del lote.
@@ -135,14 +142,19 @@ def main(argv: list[str] | None = None) -> int:
             waited = throttle.wait_for(estimate)
             print(f"[{number}/{len(cases)}] {case['id']} · {case['variant']} · {', '.join(sorted(documents)) if documents else 'corpus completo'}"
                   + (f" (esperó {waited:.0f} s)" if waited else ""))
-            answer = _answer_with_retry(variant, case["question"])
+            try:
+                answer = _answer_with_retry(variant, case["question"])
+            except Exception as exc:  # noqa: BLE001 - se registra y el lote continúa
+                print(f"    ERROR: {str(exc)[:300]}")
+                failures.append({"case": case["id"], "variant": case["variant"], "error": str(exc)[:1000]})
+                continue
             _process(answer, case, results, throttle, estimate)
     finally:
         for client, _ in built.values():
             close = getattr(client, "close", None)
             if callable(close):
                 close()
-    return _report(results, settings, args)
+    return _report(results, settings, args, failures)
 
 
 def _process(answer: Answer, case: dict, results: list, throttle: TokenThrottle, estimate: int) -> None:
@@ -150,11 +162,13 @@ def _process(answer: Answer, case: dict, results: list, throttle: TokenThrottle,
     metrics = evaluate(answer, case)
     print(f"    citas esperadas encontradas: {_fmt(metrics['expected_recall'])} · citas válidas: {_fmt(metrics['valid_citation_ratio'])}"
           f" · citas textuales verificadas: {_fmt(metrics['verified_quote_ratio'])} · abstención correcta: {_fmt(metrics['abstention_correct'])}"
+          f" · fuentes externas: {len(metrics['external_sources'])} · sin cita textual: {len(metrics['cited_without_source'])}"
           f" · tokens en caché: {answer.cached_input_tokens} · {answer.latency_ms / 1000:.1f} s · fin: {answer.finish_reason}")
     results.append({"case": case, "metrics": metrics, "answer": answer.to_dict()})
 
 
-def _report(results: list, settings, args) -> int:
+def _report(results: list, settings, args, failures: list | None = None) -> int:
+    failures = failures or []
     lines = [
         "# Lote de pruebas · contexto largo",
         "",
@@ -172,13 +186,15 @@ def _report(results: list, settings, args) -> int:
             f"{a['input_tokens']} ({a['cached_input_tokens']}) | {a['extra'].get('thoughts_tokens')} | {a['latency_ms'] / 1000:.1f} s | {a['finish_reason']} |"
         )
     lines.append("")
+    if failures:
+        lines += ["## Casos con error", ""] + [f"- {f['case']} · {f['variant']}: {f['error'][:300]}" for f in failures] + [""]
     for item in results:
         case, a, m = item["case"], item["answer"], item["metrics"]
         lines += [f"## {case['id']} · {case['variant']}", "", f"**Pregunta:** {case['question']}", ""]
         if m["expected_missing"]:
             lines += [f"Citas esperadas no encontradas: {', '.join(m['expected_missing'])}", ""]
         lines += [a["text"], ""]
-    json_path, md_path = save_results(settings.results_dir, "lote", {"cases": results}, "\n".join(lines) + "\n")
+    json_path, md_path = save_results(settings.results_dir, "lote", {"cases": results, "failures": failures}, "\n".join(lines) + "\n")
     print(f"\nResultados guardados en:\n  {md_path}\n  {json_path}")
     return 0
 

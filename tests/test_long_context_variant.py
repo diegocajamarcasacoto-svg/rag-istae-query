@@ -178,3 +178,34 @@ class QuoteStartingWithLiteralTests(unittest.TestCase):
         units = {"INT08-art11": ("INT08", "Documentos:\n\n- a) Certificados de matrículas.\n- b) Record académico de la carrera.")}
         text = "X [INT08-art11].\n\nFuentes:\n- [INT08-art11] «a) Certificados de matrículas. b) Record académico de la carrera.»"
         self.assertTrue(parse_answer(text, units).citations[0].quote_verified)
+
+
+class SourcesTests(unittest.TestCase):
+    UNITS = {
+        "INT08-art12": ("INT08", "Un estudiante será declarado egresado cuando cumpla con los requisitos."),
+        "EXT01-art84": ("EXT01", "La matrícula en una misma asignatura podrá ser hasta por tercera vez."),
+    }
+    NAMES = {"INT08": "Reglamento de Titulación", "EXT01": "Ley Orgánica de Educación Superior (LOES)"}
+
+    def test_grouped_sources_with_document_lines_are_parsed(self) -> None:
+        from query.long_context.citations import format_sources, sources_by_document
+
+        text = ("Respuesta [INT08-art12][EXT01-art84].\n\nFuentes:\nReglamento de Titulación (INT08)\n"
+                "- [INT08-art12] «Un estudiante será declarado egresado»\n"
+                "**Ley Orgánica de Educación Superior (LOES) (EXT01)**\n"
+                "- [EXT01-art84] «podrá ser hasta por tercera vez»")
+        parsed = parse_answer(text, self.UNITS)
+        self.assertEqual([c.quote_verified for c in parsed.citations], [True, True])
+        self.assertEqual(parsed.cited_without_source, [])
+        groups = sources_by_document(parsed.citations, self.NAMES)
+        self.assertEqual([g["document_name"] for g in groups], ["Reglamento de Titulación", "Ley Orgánica de Educación Superior (LOES)"])
+        self.assertIn("Ley Orgánica de Educación Superior (LOES) (EXT01)\n- [EXT01-art84]", format_sources(groups))
+
+    def test_external_sources_are_flagged(self) -> None:
+        text = "Respuesta [INT08-art12].\n\nFuentes:\n- [INT08-art12] «Un estudiante será declarado egresado»\n- https://es.scribd.com/document/123/reglamento\n- www.ces.gob.ec"
+        parsed = parse_answer(text, self.UNITS)
+        self.assertEqual(len(parsed.external_sources), 2)
+        self.assertTrue(parsed.external_sources[0].startswith("https://es.scribd.com"))
+
+    def test_answer_exposes_official_document_names(self) -> None:
+        self.assertEqual(parse_answer("Sin fuentes externas [INT08-art12].", self.UNITS).external_sources, [])

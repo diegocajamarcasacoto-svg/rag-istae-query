@@ -185,9 +185,23 @@ class _Builder:
         return [unit for unit in self.units if unit.text]
 
 
+# Encabezado de artículo pegado a mitad de párrafo por la extracción, p. ej.
+# "…dos o más mallas vigentes. Artículo 82.- Homologación.- …" (EXT02). Solo se
+# separa la forma de encabezado (número seguido de ".-" o "-") tras un fin de
+# frase; las referencias como "el artículo 82 de la LOES" no se tocan. La regla
+# de secuencia de _accepted_articles decide después si es un artículo real.
+_INLINE_ARTICLE = re.compile(
+    r"(?<=[.;:»”)])[ \t]+(?=(?:\*\*)?\s*(?:Art[íi]culo|Art\.)\s*\d+\s*(?:\*\*)?\s*\.?\s*[-–—]\s)",
+)
+
+
+def split_inline_articles(text: str) -> str:
+    return _INLINE_ARTICLE.sub("\n", text)
+
+
 def parse_document(document_id: str, text: str) -> ParsedDocument:
     """Divide el texto limpio de una norma en unidades citables."""
-    lines = text.split("\n")
+    lines = split_inline_articles(text).split("\n")
     article_lines, rejected, jumps = _accepted_articles(lines)
     mode: StructureMode = "articulado" if article_lines else "secciones"
 

@@ -14,7 +14,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from query.long_context.citations import Citation, parse_answer
+from query.long_context.citations import Citation, format_sources, parse_answer, sources_by_document
 from query.long_context.corpus import CorpusDocument, Variant, render_corpus
 from query.long_context.llm import ChatMessage, LLMClient, LLMRequest
 from query.long_context.models import Relation
@@ -36,6 +36,9 @@ class Answer:
     unknown_citations: list[str]
     cited_without_source: list[str]
     verified_quote_ratio: float | None
+    external_sources: list[str]
+    sources: list[dict[str, Any]]
+    sources_text: str
     corpus_version: str
     provider: str
     model: str
@@ -82,9 +85,11 @@ class LongContextVariant:
         self.max_output_tokens = max_output_tokens
         self.max_history_messages = max_history_messages
         self.system = load_system_prompt(prompts_dir, variant)
+        reminder_path = Path(prompts_dir) / "recordatorio_es.txt"
+        self.reminder = reminder_path.read_text(encoding="utf-8").strip() if reminder_path.exists() else ""
         self.context = render_corpus(list(documents), variant, list(relations), rank_labels or {})
         digest = hashlib.sha256()
-        for part in (variant, self.system, self.context, client.model):
+        for part in (variant, self.system, self.context, self.reminder, client.model):
             digest.update(part.encode("utf-8"))
         # Identifica exactamente qué instrucciones, corpus y modelo produjeron cada respuesta.
         self.corpus_version = digest.hexdigest()[:16]
@@ -93,6 +98,7 @@ class LongContextVariant:
             for doc in documents
             for unit in doc.parsed.units
         }
+        self.document_names: dict[str, str] = {doc.info.document_id: doc.info.name for doc in documents}
 
     def build_request(self, question: str, history: Sequence[ChatMessage] = ()) -> LLMRequest:
         if not isinstance(question, str) or not question.strip():
@@ -106,6 +112,7 @@ class LongContextVariant:
             temperature=self.temperature,
             max_output_tokens=self.max_output_tokens,
             cache_key=self.corpus_version,
+            reminder=self.reminder,
         )
 
     def count_tokens(self) -> int:
@@ -114,6 +121,7 @@ class LongContextVariant:
 
     def _to_answer(self, question: str, text: str, response_meta: dict[str, Any], latency_ms: float) -> Answer:
         parsed = parse_answer(text, self.units)
+        sources = sources_by_document(parsed.citations, self.document_names)
         return Answer(
             variant=self.variant,
             variant_name=VARIANT_NAMES[self.variant],
@@ -125,6 +133,9 @@ class LongContextVariant:
             unknown_citations=parsed.unknown_ids,
             cited_without_source=parsed.cited_without_source,
             verified_quote_ratio=parsed.verified_quote_ratio,
+            external_sources=parsed.external_sources,
+            sources=sources,
+            sources_text=format_sources(sources),
             corpus_version=self.corpus_version,
             provider=self.client.name,
             model=response_meta.get("model") or self.client.model,

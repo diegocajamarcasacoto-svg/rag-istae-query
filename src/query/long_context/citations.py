@@ -6,7 +6,8 @@ sin intervención humana:
 
 - que cada identificador citado exista en el corpus;
 - que cada cita textual aparezca realmente en la unidad citada;
-- si el modelo se abstuvo por falta de información.
+- si el modelo se abstuvo por falta de información;
+- si citó fuentes externas (URL o sitios web), que nunca son válidas.
 
 Es una medida automática de trazabilidad y un indicador parcial de fidelidad;
 no reemplaza la evaluación humana de exactitud.
@@ -16,13 +17,14 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 CITATION = re.compile(r"\[((?:INT|EXT)\d{2}-[A-Za-z0-9.\-]+)\]")
 _SOURCES_HEADER = re.compile(r"^\s*(?:\*\*)?\s*fuentes\s*:?\s*(?:\*\*)?\s*:?\s*$", re.IGNORECASE | re.MULTILINE)
 _SOURCE_LINE = re.compile(r"^\s*[-*]\s*\[(?P<id>[^\]]+)\]\s*(?P<quote>.*)$")
 _ABSTENTION = re.compile(r"^\s*no encontr[ée] en la normativa disponible", re.IGNORECASE)
 _MIN_QUOTE_CHARS = 12
+_EXTERNAL = re.compile(r"https?://\S+|www\.\S+|\b[\w-]+\.(?:com|org|net|edu|gob|gov|ec|io)\b(?:/\S*)?", re.IGNORECASE)
 
 
 @dataclass
@@ -44,6 +46,7 @@ class ParsedAnswer:
     abstained: bool
     unknown_ids: list[str]
     cited_without_source: list[str]
+    external_sources: list[str] = field(default_factory=list)
 
     @property
     def verified_quote_ratio(self) -> float | None:
@@ -117,4 +120,36 @@ def parse_answer(text: str, units: dict[str, tuple[str, str]]) -> ParsedAnswer:
         abstained=bool(_ABSTENTION.match(text)),
         unknown_ids=[c.unit_id for c in citations if not c.known],
         cited_without_source=sorted(body_ids - set(quotes)),
+        external_sources=list(dict.fromkeys(m.group(0).rstrip(").,;»") for m in _EXTERNAL.finditer(text))),
     )
+
+
+def sources_by_document(citations: list[Citation], document_names: dict[str, str]) -> list[dict[str, object]]:
+    """Agrupa las citas válidas por documento con su nombre oficial del catálogo.
+
+    La interfaz muestra esta lista en lugar de confiar en los nombres que escriba
+    el modelo: el nombre sale del catálogo y solo se incluyen unidades existentes.
+    """
+    groups: dict[str, dict[str, object]] = {}
+    for citation in citations:
+        if not citation.known or not citation.document_id:
+            continue
+        group = groups.setdefault(citation.document_id, {
+            "document_id": citation.document_id,
+            "document_name": document_names.get(citation.document_id, citation.document_id),
+            "units": [],
+        })
+        group["units"].append({"unit_id": citation.unit_id, "quote": citation.quote, "quote_verified": citation.quote_verified})
+    return list(groups.values())
+
+
+def format_sources(groups: list[dict[str, object]]) -> str:
+    """Texto de "Fuentes:" armado desde datos verificados (no desde el texto del modelo)."""
+    lines = ["Fuentes:"]
+    for group in groups:
+        lines.append(f"{group['document_name']} ({group['document_id']})")
+        for unit in group["units"]:
+            quote = f" «{unit['quote'].strip('«» ')}»" if unit["quote"] else ""
+            lines.append(f"- [{unit['unit_id']}]{quote}")
+    return "\n".join(lines) if groups else ""
+

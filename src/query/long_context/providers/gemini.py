@@ -95,7 +95,7 @@ class GeminiClient:
             types.Content(role="model" if message.role == "assistant" else "user", parts=[types.Part(text=message.content)])
             for message in request.history
         ]
-        items.append(types.Content(role="user", parts=[types.Part(text=wrap_question(request.question))]))
+        items.append(types.Content(role="user", parts=[types.Part(text=wrap_question(request.question, request.reminder))]))
         return items
 
     def _thinking(self) -> Any | None:

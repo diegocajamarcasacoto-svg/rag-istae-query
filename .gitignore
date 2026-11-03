@@ -5,3 +5,5 @@ config/local.json
 config/generation.json
 .pytest_cache/
 config/long_context.json
+config/long_context.*.json
+!config/long_context.example.json

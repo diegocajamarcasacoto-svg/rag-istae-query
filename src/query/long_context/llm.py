@@ -37,6 +37,9 @@ class LLMRequest:
     temperature: float = 0.0
     max_output_tokens: int = 2048
     cache_key: str | None = None  # identifica el prefijo (instrucciones + documentos)
+    # Recordatorio breve de las reglas de formato que va después de la pregunta:
+    # tras ~800.000 tokens de documentos, las instrucciones del inicio pierden peso.
+    reminder: str = ""
 
 
 @dataclass
@@ -72,5 +75,6 @@ def wrap_documents(context: str) -> str:
     return f"<documentos>\n{context}\n</documentos>"
 
 
-def wrap_question(question: str) -> str:
-    return f"<pregunta>\n{question.strip()}\n</pregunta>"
+def wrap_question(question: str, reminder: str = "") -> str:
+    text = f"<pregunta>\n{question.strip()}\n</pregunta>"
+    return f"{text}\n\n{reminder.strip()}" if reminder.strip() else text

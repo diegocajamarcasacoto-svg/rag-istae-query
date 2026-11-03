@@ -27,6 +27,7 @@ class LongContextSettings:
     thinking_level: str | None
     timeout_seconds: float
     max_history_messages: int
+    base_url: str | None
     prompts_dir: Path
     catalog: Path
     outputs_dir: Path
@@ -62,6 +63,7 @@ def load_settings(path: Path) -> LongContextSettings:
         thinking_level=data.get("thinking_level") or None,
         timeout_seconds=float(data.get("timeout_seconds", 300)),
         max_history_messages=int(data.get("max_history_messages", 6)),
+        base_url=data.get("base_url") or None,
         prompts_dir=_path(base, data.get("prompts_dir", "prompts")),
         catalog=_path(base, data.get("catalog", "catalogo_normativo.json")),
         outputs_dir=outputs_dir,
@@ -81,6 +83,18 @@ def build_client(settings: LongContextSettings) -> LLMClient:
             thinking_budget=settings.thinking_budget,
             thinking_level=settings.thinking_level,
             send_temperature=settings.temperature is not None,
+            timeout_seconds=settings.timeout_seconds,
+        )
+    if settings.provider in ("openrouter", "nvidia", "deepseek", "openai_compatible"):
+        from query.long_context.providers.openai_compatible import OpenAICompatibleClient
+
+        return OpenAICompatibleClient(
+            settings.model,
+            provider=settings.provider,
+            base_url=settings.base_url,
+            api_key_env=settings.api_key_env,
+            send_temperature=settings.temperature is not None,
+            reasoning_effort=settings.thinking_level,
             timeout_seconds=settings.timeout_seconds,
         )
     raise ValueError(f"Proveedor no implementado: {settings.provider!r}")
