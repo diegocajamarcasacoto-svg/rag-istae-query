@@ -32,6 +32,9 @@ def _print_answer(answer: Answer) -> None:
     print(f"Variante: {answer.variant_name} · modelo: {answer.model} · versión de corpus: {answer.corpus_version}")
     print(f"Tokens: entrada={answer.input_tokens} (en caché={answer.cached_input_tokens}) · salida={answer.output_tokens}")
     print(f"Latencia: {answer.latency_ms / 1000:.1f} s · motivo de fin: {answer.finish_reason}")
+    if answer.extra.get("model_mismatch"):
+        print(f"AVISO: se pidió {answer.extra.get('requested_model')} pero respondió {answer.model}. "
+              "El modelo puede estar deprecado y redirigido; no mezcle estos resultados con los de otro modelo.")
 
 
 def main(argv: list[str] | None = None) -> int:

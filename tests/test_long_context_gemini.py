@@ -146,3 +146,11 @@ class SettingsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ModelMismatchTests(unittest.TestCase):
+    def test_redirected_model_is_flagged(self) -> None:
+        response = GeminiClient("gemini-2.5-flash", client=FakeSDK()).generate(make_request())
+        self.assertTrue(response.extra["model_mismatch"])
+        response = GeminiClient("gemini-x", client=FakeSDK()).generate(make_request())
+        self.assertFalse(response.extra["model_mismatch"])

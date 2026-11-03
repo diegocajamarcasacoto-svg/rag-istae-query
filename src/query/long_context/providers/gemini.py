@@ -175,13 +175,22 @@ class GeminiClient:
         reason = getattr(candidates[0], "finish_reason", None) if candidates else None
         reason_name = getattr(reason, "name", None) or (str(reason) if reason is not None else None)
         thoughts = getattr(usage, "thoughts_token_count", None) if usage else None
+        served = getattr(response, "model_version", None) or self.model
+        # Google redirige modelos deprecados a otros sin error: se registra si el
+        # modelo que respondió no es el configurado, para no mezclar resultados.
+        mismatch = not str(served).startswith(self.model)
         return LLMResponse(
             text=(getattr(response, "text", None) or "").strip(),
-            model=getattr(response, "model_version", None) or self.model,
+            model=served,
             input_tokens=getattr(usage, "prompt_token_count", None) if usage else None,
             cached_input_tokens=getattr(usage, "cached_content_token_count", None) if usage else None,
             output_tokens=getattr(usage, "candidates_token_count", None) if usage else None,
             finish_reason=reason_name,
             latency_ms=latency_ms,
-            extra={"thoughts_tokens": thoughts, "cache_used": self.use_cache},
+            extra={
+                "thoughts_tokens": thoughts,
+                "cache_used": self.use_cache,
+                "requested_model": self.model,
+                "model_mismatch": mismatch,
+            },
         )
