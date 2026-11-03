@@ -1,0 +1,2236 @@
+{
+  "source": "Matriz_Reglamentos_TESIS_ISTAE_v5.xlsx",
+  "source_sha256": "96892d5ef374c6a1f8c0bd33c01b1e7efa2b53a39577ab751f70b15fce41f789",
+  "generated_at_utc": "2026-11-03T01:13:31+00:00",
+  "rank_labels": {
+    "1": "Constitución",
+    "2": "Ley orgánica",
+    "3": "Reglamento o acuerdo de organismo nacional",
+    "4": "Instrumento técnico de organismo nacional",
+    "5": "Estatuto institucional",
+    "6": "Reglamento o normativa interna"
+  },
+  "rank_status": "propuesta: pendiente de validación jurídica",
+  "documents": [
+    {
+      "document_id": "EXT01",
+      "code": "EXT-LOES",
+      "name": "Ley Orgánica de Educación Superior (LOES)",
+      "doc_type": "Externo",
+      "issuer": "Asamblea Nacional",
+      "domain": "Transversal (ley marco)",
+      "rank": 2,
+      "rank_label": "Ley orgánica",
+      "source_file": "EXT01 - LEY_ORGANICA_DE_EDUCACION_SUPERIOR_LOES.pdf"
+    },
+    {
+      "document_id": "EXT02",
+      "code": "EXT-RRA",
+      "name": "Reglamento de Régimen Académico",
+      "doc_type": "Externo",
+      "issuer": "CES",
+      "domain": "Régimen académico / titulación / prácticas",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT02 - REGLAMENRO DE RÉGIMEN ACADÉMICO_2022.pdf"
+    },
+    {
+      "document_id": "EXT03",
+      "code": "EXT-SNNA",
+      "name": "Reglamento del Sistema Nacional de Nivelación y Admisión (SNNA)",
+      "doc_type": "Externo",
+      "issuer": "SENESCYT",
+      "domain": "Régimen académico (acceso)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT03 - acuerdo_no._2024-0055-ac_reglamento_snna.pdf"
+    },
+    {
+      "document_id": "EXT04",
+      "code": "EXT-RHOM",
+      "name": "Reglamento para el Reconocimiento y Homologación de Estudios en los Institutos",
+      "doc_type": "Externo",
+      "issuer": "SENESCYT",
+      "domain": "Régimen académico",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT04 - REGLAMENTO PARA EL RECONOCIMIENTO, HOMOLOGACIÓN DE ESTUDIOS Y RECONOCIMIENTO POR VALIDACIÓN PARA EL EJERCICIO PROFESIONAL A EJECUTARSE EN LOS INSTI.pdf"
+    },
+    {
+      "document_id": "EXT05",
+      "code": "EXT-RREG",
+      "name": "Reglamento de Registro y Acreditación de Actores de Investigación e Incentivos a la I+D+i",
+      "doc_type": "Externo",
+      "issuer": "SENESCYT",
+      "domain": "Aseguramiento de la calidad (investigación)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT05 - reglamento_registro_y_acreditacion0059782001751577359.pdf"
+    },
+    {
+      "document_id": "EXT06",
+      "code": "EXT-RARM",
+      "name": "Reglamento de Armonización de la Nomenclatura de Títulos y Grados",
+      "doc_type": "Externo",
+      "issuer": "CES",
+      "domain": "Titulación",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT06 - Reglamento_Armonización_nomenclatura_TítulosProfesionales_GradosAcadémicos.pdf"
+    },
+    {
+      "document_id": "EXT07",
+      "code": "EXT-RGRAT",
+      "name": "Reglamento para Garantizar la Gratuidad en la Educación Superior",
+      "doc_type": "Externo",
+      "issuer": "CES",
+      "domain": "Régimen académico (matrícula, pérdida de gratuidad)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT07 - REGLAMENTO PARA GARANTIZAR LA GRATUIDAD EN EDUCACION SUPERIOR.pdf"
+    },
+    {
+      "document_id": "EXT08",
+      "code": "EXT-RTH-SEN",
+      "name": "Reglamento Interno de Talento Humano SENESCYT",
+      "doc_type": "Externo",
+      "issuer": "SENESCYT",
+      "domain": "Régimen disciplinario (personal)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT08 - REGLAMENTO-INTERNO-TALENTO-HUMANO-SENESCYT_ACUERDO-NO.-2016-111.pdf"
+    },
+    {
+      "document_id": "EXT09",
+      "code": "EXT-MEE24",
+      "name": "Modelo de Evaluación Externa 2024 con fines de acreditación para los ISTT",
+      "doc_type": "Externo",
+      "issuer": "CACES",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 4,
+      "rank_label": "Instrumento técnico de organismo nacional",
+      "source_file": "EXT09 - MDE-CACES-2024.pdf"
+    },
+    {
+      "document_id": "EXT10",
+      "code": "EXT-GMEE24",
+      "name": "Guía del Modelo de Evaluación Externa 2024 – Indicadores cualitativos",
+      "doc_type": "Externo",
+      "issuer": "CACES",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 4,
+      "rank_label": "Instrumento técnico de organismo nacional",
+      "source_file": "EXT10 - anexo_041_-_guía_del_modelo_de_evaluación_externa.pdf"
+    },
+    {
+      "document_id": "EXT11",
+      "code": "EXT-PMEE24",
+      "name": "Pesos de los criterios e indicadores del Modelo de Evaluación Externa 2024",
+      "doc_type": "Externo",
+      "issuer": "CACES",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 4,
+      "rank_label": "Instrumento técnico de organismo nacional",
+      "source_file": "EXT11 - Pesos de los criterios e indicadores del modelo de evaluación externa 2024.pdf"
+    },
+    {
+      "document_id": "EXT12",
+      "code": "EXT-RICS",
+      "name": "Reglamento de las Instituciones de Educación Superior de Formación Técnica y Tecnológica",
+      "doc_type": "Externo",
+      "issuer": "CES",
+      "domain": "Transversal (institutos)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT12 - REGLAMENTO DE LAS INSTITUCIONES TECNICAS Y TECNOLOGICAS DE EDUCACIÓN SUPERIOR.pdf"
+    },
+    {
+      "document_id": "EXT13",
+      "code": "EXT-RCEP",
+      "name": "Reglamento de Carrera y Escalafón del Personal Académico del Sistema de Educación Superior",
+      "doc_type": "Externo",
+      "issuer": "CES",
+      "domain": "Transversal (docencia)",
+      "rank": 3,
+      "rank_label": "Reglamento o acuerdo de organismo nacional",
+      "source_file": "EXT13 - reglamento de carrera y escalafon del profesor e investigador del sistema de educacion superior.pdf"
+    },
+    {
+      "document_id": "INT01",
+      "code": "INT-EST",
+      "name": "Estatuto Interno ISTAE-2025",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (base)",
+      "rank": 5,
+      "rank_label": "Estatuto institucional",
+      "source_file": "INT01 - 1. ESTATUTO INTERNO ISTAE-2025.docx"
+    },
+    {
+      "document_id": "INT02",
+      "code": "INT-ME",
+      "name": "Modelo Educativo ISTAE",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT02 - 2. MODELO_EDUCATIVO_ISTAE.docx"
+    },
+    {
+      "document_id": "INT03",
+      "code": "INT-OCS",
+      "name": "Reglamento del Órgano Colegiado Superior",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (gobierno)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT03 - 3. REGLAMENTO DE ORGANO COLEGIADO SUPERIOR ISTAE.docx"
+    },
+    {
+      "document_id": "INT04",
+      "code": "INT-RCET",
+      "name": "Reglamento del Consejo Estudiantil Tecnológico",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (gobierno)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT04 - 4. REGLAMENTO DEL CONSEJO ESTUDIANTIL TECNOLÓGICO.docx"
+    },
+    {
+      "document_id": "INT05",
+      "code": "INT-ELEC",
+      "name": "Reglamento de Elecciones",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (gobierno)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT05 - 5. REGLAMENTO DEL ELECCIONES.docx"
+    },
+    {
+      "document_id": "INT06",
+      "code": "INT-SEI",
+      "name": "Reglamento del Sistema de Evaluación Interna y Gestión de la Calidad",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT06 - 6. Reglamento del Sistema de Evaluación Interna  Aseguramiento de la Calidad.docx"
+    },
+    {
+      "document_id": "INT07",
+      "code": "INT-REEI",
+      "name": "Reglamento de Evaluación Estudiantil Interno",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico y evaluación",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT07 - 7. REGLAMENTO DE EVALUACION ESTUDIANTIL INTERNO ISTAE.docx"
+    },
+    {
+      "document_id": "INT08",
+      "code": "INT-RTG",
+      "name": "Reglamento de Titulación y Graduación",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Titulación y TIC",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT08 - 8. REGLAMENTOS DE TITULACION.docx"
+    },
+    {
+      "document_id": "INT09",
+      "code": "INT-TIC-P",
+      "name": "Normativa para los Trabajos de Integración Curricular — Proyecto",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Titulación y TIC",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT09 - 9. NORMATIVA PARA LOS TRABAJOS DE INTEGRACIÓN CURRICULAR.docx"
+    },
+    {
+      "document_id": "INT10",
+      "code": "INT-TIC-A",
+      "name": "Normativa para los Trabajos de Integración Curricular — Artículo científico",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Titulación y TIC",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT10 - 10. NORMATIVA PARA LOS TRABAJOS DE INTEGRACIÓN CURRICULAR ARTIUCLO CIENTÍFICO.docx"
+    },
+    {
+      "document_id": "INT11",
+      "code": "INT-SEGEVAL",
+      "name": "Reglamento de Seguimiento y Evaluación del Currículo",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico y evaluación",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT11 - 11. REGLAMENTO DE SEGUIMIENTO Y EVALUACIÓN DEL CURRÍCULO.docx"
+    },
+    {
+      "document_id": "INT12",
+      "code": "INT-INAS",
+      "name": "Normativa de Seguimiento por Inasistencia y Prevención de Reprobación",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico y evaluación",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT12 - 12. Normativa_Seguimiento_Inasistencia_ISTAE_1.docx"
+    },
+    {
+      "document_id": "INT13",
+      "code": "INT-RVCS",
+      "name": "Reglamento de Vinculación con la Sociedad",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas preprofesionales",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT13 - 13. REGLAMENTO DE VINCULACION CON LA SOCIEDAD.docx"
+    },
+    {
+      "document_id": "INT14",
+      "code": "INT-SERVCOM",
+      "name": "Normativa de Servicio Comunitario",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas preprofesionales",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT14 - 14. NORMATIVA DE SERVICIO COMUNITARIO FORMATO FINAL.docx"
+    },
+    {
+      "document_id": "INT15",
+      "code": "INT-PRAL",
+      "name": "Reglamento de Prácticas Preprofesionales",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas preprofesionales",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT15 - 15. PRACTICAS LABORALES O PREPROFESIONALES.docx"
+    },
+    {
+      "document_id": "INT16",
+      "code": "INT-PRAL-P",
+      "name": "Normativa de Prácticas Laborales (proceso)",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas preprofesionales",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT16 - 16. NORMATIVA DE PRACTICAS LABORALES.docx"
+    },
+    {
+      "document_id": "INT17",
+      "code": "INT-ACOMP",
+      "name": "Reglamento de Acompañamiento Estudiantil",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico y evaluación",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT17 - 17. REGLAMENTO DE ACOMPAÑAMIENTO ESTUDIANTIL-ANEXOS.pdf"
+    },
+    {
+      "document_id": "INT18",
+      "code": "INT-DESDOC",
+      "name": "Reglamento de Evaluación Integral del Desempeño Docente",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT18 - 18. REGLAMENTO DE DESEMPEÑO DOCENTE_IPA2026.docx"
+    },
+    {
+      "document_id": "INT19",
+      "code": "INT-SELDOC",
+      "name": "Reglamento de Selección del Personal Académico",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (docencia)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT19 - 19. NORMATIVA INTERNA seleccion de docente.docx"
+    },
+    {
+      "document_id": "INT20",
+      "code": "INT-RTH",
+      "name": "Reglamento de Administración de Talento Humano",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen disciplinario (personal)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT20 - 20. REGLAMENTO DE ADMINISTRACIÓN DE TALENTO HUMANO DEL INSTITUTO SUPERIOR TECNOLÓGICO ALBERTO ENRÍQUE.docx"
+    },
+    {
+      "document_id": "INT21",
+      "code": "INT-INV",
+      "name": "Reglamento de Investigación, Desarrollo Tecnológico e Innovación",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT21 - 22. REGLAMENTO DE INVESTIGACIÓN.docx"
+    },
+    {
+      "document_id": "INT22",
+      "code": "INT-ETICA",
+      "name": "Código de Ética Institucional",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen disciplinario",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT22 - 23. CODIGO DE ÉTICA INSTITUCIONAL.docx"
+    },
+    {
+      "document_id": "INT23",
+      "code": "INT-RRDI",
+      "name": "Reglamento de Régimen Disciplinario",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen disciplinario",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT23 - 24. REGLAMENTO DE RÉGIMEN DISCIPLINARIO.docx"
+    },
+    {
+      "document_id": "INT24",
+      "code": "INT-AFIRM",
+      "name": "Normativa Interna de Acción Afirmativa",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Transversal (bienestar)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT24 - 26. REGLAMENTO INTERNA DE ACCION AFIRMATIVA.docx"
+    },
+    {
+      "document_id": "INT25",
+      "code": "INT-SIGA",
+      "name": "Reglamento SIGA",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico (matrícula y notas)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT25 - 28. REGLAMENTO SIGA.docx"
+    },
+    {
+      "document_id": "INT26",
+      "code": "INT-RRII",
+      "name": "Reglamento de Relaciones Internacionales e Institucionales",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas (convenios)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT26 - 29. REGLAMENTOS_ RII.docx"
+    },
+    {
+      "document_id": "INT27",
+      "code": "INT-CAI",
+      "name": "Reglamento del Centro de Idiomas",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Titulación (requisito de idioma)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT27 - 31. REGLAMENTO_CENTRO_DE_IDIOMAS_DEL_INSTITUTO_SUPERIOR_TECNOLOGICO_ALBERTO_ENRIQUEZ.pdf"
+    },
+    {
+      "document_id": "INT28",
+      "code": "INT-SSO",
+      "name": "Reglamento de Seguridad y Salud Ocupacional",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Prácticas (talleres y laboratorios)",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT28 - 32. REGLAMENTO DE SEGURIDAD Y SALUD OCUPACIONAL-signed.pdf"
+    },
+    {
+      "document_id": "INT29",
+      "code": "INT-DIVULG",
+      "name": "Reglamento de la Unidad de Divulgación Científica",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT29 - 33. REGLAMENTO DE LA UNIDAD DE DIVULGACION CIENTIFICA.docx"
+    },
+    {
+      "document_id": "INT30",
+      "code": "INT-PLAN",
+      "name": "Reglamento de Planificación Estratégica",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT30 - 34. Reglamento de Planificación Estratégica.docx"
+    },
+    {
+      "document_id": "INT31",
+      "code": "INT-PLAN-P",
+      "name": "Normativa de Planificación Estratégica Institucional",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Aseguramiento de la calidad",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT31 - 35. NORMATIVA PLANIFICACION ESTRATEGICA INSTITUCIONAL-signed.pdf"
+    },
+    {
+      "document_id": "INT32",
+      "code": "INT-GRAD",
+      "name": "Reglamento de Seguimiento a Graduados",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Titulación y graduación",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT32 - 36. REGLAMENTO DE SEGUIMIENTO A GRADUADOS.pdf"
+    },
+    {
+      "document_id": "INT33",
+      "code": "INT-EVA",
+      "name": "Reglamento de Uso del Entorno Virtual de Aprendizaje (EVA)",
+      "doc_type": "Interno",
+      "issuer": "OCS ISTAE",
+      "domain": "Régimen académico",
+      "rank": 6,
+      "rank_label": "Reglamento o normativa interna",
+      "source_file": "INT33 - 41. REGLAMENTO EVA.docx"
+    }
+  ],
+  "relations": [
+    {
+      "source_document_id": "EXT02",
+      "source_code": "EXT-RRA",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT12",
+      "source_code": "EXT-RICS",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT12",
+      "source_code": "EXT-RICS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT03",
+      "source_code": "EXT-SNNA",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT03",
+      "source_code": "EXT-SNNA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT04",
+      "source_code": "EXT-RHOM",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT04",
+      "source_code": "EXT-RHOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "EXT04",
+      "source_code": "EXT-RHOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT05",
+      "source_code": "EXT-RREG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT06",
+      "source_code": "EXT-RARM",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT06",
+      "source_code": "EXT-RARM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT07",
+      "source_code": "EXT-RGRAT",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT07",
+      "source_code": "EXT-RGRAT",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT07",
+      "source_code": "EXT-RGRAT",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT03",
+      "target_code": "EXT-SNNA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT08",
+      "source_code": "EXT-RTH-SEN",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT09",
+      "source_code": "EXT-MEE24",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT09",
+      "source_code": "EXT-MEE24",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT09",
+      "source_code": "EXT-MEE24",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "EXT09",
+      "source_code": "EXT-MEE24",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT10",
+      "source_code": "EXT-GMEE24",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT10",
+      "source_code": "EXT-GMEE24",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT11",
+      "target_code": "EXT-PMEE24",
+      "verification": "Implícita – solo jerarquía"
+    },
+    {
+      "source_document_id": "EXT11",
+      "source_code": "EXT-PMEE24",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "EXT13",
+      "source_code": "EXT-RCEP",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT13",
+      "source_code": "EXT-RCEP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "EXT13",
+      "source_code": "EXT-RCEP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "EXT13",
+      "source_code": "EXT-RCEP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT03",
+      "target_code": "EXT-SNNA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Desarrolla",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT04",
+      "target_code": "EXT-RHOM",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT03",
+      "target_code": "EXT-SNNA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT07",
+      "target_code": "INT-REEI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT01",
+      "source_code": "INT-EST",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT08",
+      "target_code": "INT-RTG",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT02",
+      "source_code": "INT-ME",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT02",
+      "source_code": "INT-ME",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT02",
+      "source_code": "INT-ME",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT02",
+      "source_code": "INT-ME",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT02",
+      "source_code": "INT-ME",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT03",
+      "source_code": "INT-OCS",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT03",
+      "source_code": "INT-OCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT03",
+      "source_code": "INT-OCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT03",
+      "source_code": "INT-OCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT03",
+      "source_code": "INT-OCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT05",
+      "target_code": "INT-ELEC",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT04",
+      "source_code": "INT-RCET",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT04",
+      "source_code": "INT-RCET",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT04",
+      "source_code": "INT-RCET",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT04",
+      "source_code": "INT-RCET",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT05",
+      "target_code": "INT-ELEC",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT03",
+      "target_code": "INT-OCS",
+      "verification": "Confirmada – remisión desde el destino"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT04",
+      "target_code": "INT-RCET",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT05",
+      "source_code": "INT-ELEC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT10",
+      "target_code": "EXT-GMEE24",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT11",
+      "target_code": "EXT-PMEE24",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT06",
+      "source_code": "INT-SEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT30",
+      "target_code": "INT-PLAN",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT07",
+      "target_code": "EXT-RGRAT",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT02",
+      "target_code": "INT-ME",
+      "verification": "Confirmada – remisión desde el destino"
+    },
+    {
+      "source_document_id": "INT07",
+      "source_code": "INT-REEI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT25",
+      "target_code": "INT-SIGA",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT27",
+      "target_code": "INT-CAI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT08",
+      "source_code": "INT-RTG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Desarrolla",
+      "target_document_id": "INT08",
+      "target_code": "INT-RTG",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT09",
+      "source_code": "INT-TIC-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Desarrolla",
+      "target_document_id": "INT08",
+      "target_code": "INT-RTG",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT10",
+      "source_code": "INT-TIC-A",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT09",
+      "target_code": "INT-TIC-P",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT32",
+      "target_code": "INT-GRAD",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT11",
+      "source_code": "INT-SEGEVAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT02",
+      "target_code": "INT-ME",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Desarrolla",
+      "target_document_id": "INT07",
+      "target_code": "INT-REEI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT17",
+      "target_code": "INT-ACOMP",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT12",
+      "source_code": "INT-INAS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT25",
+      "target_code": "INT-SIGA",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT13",
+      "source_code": "INT-RVCS",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT13",
+      "source_code": "INT-RVCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT13",
+      "source_code": "INT-RVCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT13",
+      "source_code": "INT-RVCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT13",
+      "source_code": "INT-RVCS",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT14",
+      "source_code": "INT-SERVCOM",
+      "relation": "Desarrolla",
+      "target_document_id": "INT13",
+      "target_code": "INT-RVCS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT14",
+      "source_code": "INT-SERVCOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT14",
+      "source_code": "INT-SERVCOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT14",
+      "source_code": "INT-SERVCOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT14",
+      "source_code": "INT-SERVCOM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT15",
+      "source_code": "INT-PRAL",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT13",
+      "target_code": "INT-RVCS",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT16",
+      "source_code": "INT-PRAL-P",
+      "relation": "Desarrolla",
+      "target_document_id": "INT15",
+      "target_code": "INT-PRAL",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT16",
+      "source_code": "INT-PRAL-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT16",
+      "source_code": "INT-PRAL-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT16",
+      "source_code": "INT-PRAL-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT16",
+      "source_code": "INT-PRAL-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT17",
+      "source_code": "INT-ACOMP",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT17",
+      "source_code": "INT-ACOMP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT17",
+      "source_code": "INT-ACOMP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT17",
+      "source_code": "INT-ACOMP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT17",
+      "source_code": "INT-ACOMP",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT24",
+      "target_code": "INT-AFIRM",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT18",
+      "source_code": "INT-DESDOC",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT18",
+      "source_code": "INT-DESDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT18",
+      "source_code": "INT-DESDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT18",
+      "source_code": "INT-DESDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT18",
+      "source_code": "INT-DESDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT19",
+      "source_code": "INT-SELDOC",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT19",
+      "source_code": "INT-SELDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT19",
+      "source_code": "INT-SELDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT19",
+      "source_code": "INT-SELDOC",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT20",
+      "source_code": "INT-RTH",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT08",
+      "target_code": "EXT-RTH-SEN",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT09",
+      "target_code": "EXT-MEE24",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT05",
+      "target_code": "EXT-RREG",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT21",
+      "source_code": "INT-INV",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT02",
+      "target_code": "INT-ME",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT22",
+      "source_code": "INT-ETICA",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT22",
+      "source_code": "INT-ETICA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT22",
+      "source_code": "INT-ETICA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT22",
+      "source_code": "INT-ETICA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT22",
+      "source_code": "INT-ETICA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT23",
+      "source_code": "INT-RRDI",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT23",
+      "source_code": "INT-RRDI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT23",
+      "source_code": "INT-RRDI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT23",
+      "source_code": "INT-RRDI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT23",
+      "source_code": "INT-RRDI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT22",
+      "target_code": "INT-ETICA",
+      "verification": "Confirmada – remisión desde el destino"
+    },
+    {
+      "source_document_id": "INT24",
+      "source_code": "INT-AFIRM",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT24",
+      "source_code": "INT-AFIRM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT24",
+      "source_code": "INT-AFIRM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT13",
+      "target_code": "EXT-RCEP",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT24",
+      "source_code": "INT-AFIRM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT24",
+      "source_code": "INT-AFIRM",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT07",
+      "target_code": "EXT-RGRAT",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT18",
+      "target_code": "INT-DESDOC",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT22",
+      "target_code": "INT-ETICA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT25",
+      "source_code": "INT-SIGA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT26",
+      "source_code": "INT-RRII",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT26",
+      "source_code": "INT-RRII",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT26",
+      "source_code": "INT-RRII",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT26",
+      "source_code": "INT-RRII",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT26",
+      "source_code": "INT-RRII",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT15",
+      "target_code": "INT-PRAL",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT27",
+      "source_code": "INT-CAI",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT27",
+      "source_code": "INT-CAI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT27",
+      "source_code": "INT-CAI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT27",
+      "source_code": "INT-CAI",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT28",
+      "source_code": "INT-SSO",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT28",
+      "source_code": "INT-SSO",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT28",
+      "source_code": "INT-SSO",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT28",
+      "source_code": "INT-SSO",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT23",
+      "target_code": "INT-RRDI",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Desarrolla",
+      "target_document_id": "INT21",
+      "target_code": "INT-INV",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT29",
+      "source_code": "INT-DIVULG",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT10",
+      "target_code": "INT-TIC-A",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT30",
+      "source_code": "INT-PLAN",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT30",
+      "source_code": "INT-PLAN",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT30",
+      "source_code": "INT-PLAN",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT30",
+      "source_code": "INT-PLAN",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT06",
+      "target_code": "INT-SEI",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT31",
+      "source_code": "INT-PLAN-P",
+      "relation": "Desarrolla",
+      "target_document_id": "INT30",
+      "target_code": "INT-PLAN",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT31",
+      "source_code": "INT-PLAN-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT31",
+      "source_code": "INT-PLAN-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT31",
+      "source_code": "INT-PLAN-P",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT32",
+      "source_code": "INT-GRAD",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT32",
+      "source_code": "INT-GRAD",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT32",
+      "source_code": "INT-GRAD",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT32",
+      "source_code": "INT-GRAD",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT32",
+      "source_code": "INT-GRAD",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT08",
+      "target_code": "INT-RTG",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Desarrolla",
+      "target_document_id": "INT01",
+      "target_code": "INT-EST",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT01",
+      "target_code": "EXT-LOES",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT12",
+      "target_code": "EXT-RICS",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "EXT02",
+      "target_code": "EXT-RRA",
+      "verification": "Confirmada – cita expresa"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT02",
+      "target_code": "INT-ME",
+      "verification": "Parcial – referencia indirecta"
+    },
+    {
+      "source_document_id": "INT33",
+      "source_code": "INT-EVA",
+      "relation": "Debe ser compatible con",
+      "target_document_id": "INT25",
+      "target_code": "INT-SIGA",
+      "verification": "Parcial – referencia indirecta"
+    }
+  ]
+}
