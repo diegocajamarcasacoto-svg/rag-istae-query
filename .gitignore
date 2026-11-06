@@ -3,4 +3,6 @@ __pycache__/
 *.py[cod]
 config/local.json
 config/generation.json
+config/generation.openrouter.json
 .pytest_cache/
+logs/

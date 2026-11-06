@@ -5,12 +5,11 @@ from __future__ import annotations
 import time
 
 from query.context.models import ContextResult
-from query.generation.errors import GenerationConfigurationError
 from query.generation.generation_config import GenerationConfig
 from query.generation.models import GenerationResult, ProviderMetrics
 from query.generation.prompt_builder import build_prompt, load_system_prompt
+from query.generation.providers import create_provider
 from query.generation.providers.base import GenerationProvider
-from query.generation.providers.gemini import GeminiProvider
 
 
 def generate_answer(
@@ -31,13 +30,7 @@ def generate_answer(
     if not isinstance(config, GenerationConfig):
         raise TypeError("config debe ser una instancia de GenerationConfig.")
 
-    selected_provider = provider
-    if selected_provider is None:
-        if config.provider != "gemini":
-            raise GenerationConfigurationError(
-                f"Proveedor no implementado: {config.provider!r}."
-            )
-        selected_provider = GeminiProvider()
+    selected_provider = provider if provider is not None else create_provider(config.provider)
 
     system_instruction = load_system_prompt(config.system_prompt_path)
     prompt = build_prompt(context_result, system_instruction)

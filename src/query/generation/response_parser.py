@@ -1,4 +1,8 @@
-"""Normalización de respuestas del SDK Gemini a contratos del proyecto."""
+"""Normalización de respuestas del SDK Gemini a contratos del proyecto.
+
+Específico de Gemini; las APIs compatibles con OpenAI se normalizan en
+``providers/openai_compatible.py``.
+"""
 
 from __future__ import annotations
 

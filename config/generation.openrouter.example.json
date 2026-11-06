@@ -1,0 +1,18 @@
+{
+  "provider": "openrouter",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "base_url": "https://openrouter.ai/api/v1",
+  "system_prompt_path": "prompts/system_prompt_es.txt",
+  "temperature": 0.2,
+  "max_output_tokens": 2048,
+  "timeout_seconds": 120,
+  "api_key_env": "OPENROUTER_API_KEY",
+  "extra_headers": {
+    "X-Title": "RAG ISTAE"
+  },
+  "extra_body": {
+    "reasoning": {
+      "effort": "none"
+    }
+  }
+}

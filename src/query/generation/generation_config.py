@@ -4,9 +4,19 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+# Valores predeterminados por proveedor. Un proveedor nuevo solo necesita una
+# entrada aquí (si requiere defaults) y otra en ``query.generation.providers``.
+DEFAULT_API_KEY_ENV = {
+    "gemini": "GEMINI_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
+}
+DEFAULT_BASE_URL = {
+    "openrouter": "https://openrouter.ai/api/v1",
+}
 
 
 @dataclass(frozen=True)
@@ -16,6 +26,10 @@ class GenerationConfig:
     ``system_prompt_path`` se resuelve respecto del archivo JSON que declara
     la ruta. La credencial no se almacena aquí: ``api_key_env`` nombra la
     variable de entorno que consulta el adaptador del proveedor.
+
+    ``base_url``, ``extra_headers`` y ``extra_body`` solo los usan los
+    proveedores HTTP compatibles con OpenAI (p. ej. OpenRouter); Gemini los
+    ignora. ``extra_body`` se mezcla en el cuerpo de la solicitud.
     """
 
     provider: str
@@ -25,6 +39,9 @@ class GenerationConfig:
     max_output_tokens: int
     timeout_seconds: float
     api_key_env: str
+    base_url: str | None = None
+    extra_headers: dict[str, str] = field(default_factory=dict)
+    extra_body: dict[str, Any] = field(default_factory=dict)
 
 
 def load_generation_config(path: Path) -> GenerationConfig:
@@ -80,20 +97,46 @@ def load_generation_config(path: Path) -> GenerationConfig:
     ):
         raise ValueError("timeout_seconds debe ser un número finito positivo.")
 
-    api_key_env = data.get("api_key_env", "GEMINI_API_KEY")
+    provider_name = provider.strip().lower()
+    api_key_env = data.get(
+        "api_key_env",
+        DEFAULT_API_KEY_ENV.get(provider_name, f"{provider_name.upper()}_API_KEY"),
+    )
     if not isinstance(api_key_env, str) or not api_key_env.strip():
         raise TypeError("api_key_env debe ser un nombre de variable no vacío.")
+
+    base_url = data.get("base_url", DEFAULT_BASE_URL.get(provider_name))
+    if base_url is not None:
+        if not isinstance(base_url, str) or not base_url.strip():
+            raise TypeError("base_url debe ser una URL no vacía.")
+        base_url = base_url.strip().rstrip("/")
+        if not base_url.startswith(("https://", "http://")):
+            raise ValueError("base_url debe comenzar con http:// o https://.")
+
+    extra_headers = data.get("extra_headers", {})
+    if not isinstance(extra_headers, dict) or not all(
+        isinstance(key, str) and key.strip() and isinstance(value, str)
+        for key, value in extra_headers.items()
+    ):
+        raise TypeError("extra_headers debe ser un objeto JSON de textos.")
+
+    extra_body = data.get("extra_body", {})
+    if not isinstance(extra_body, dict):
+        raise TypeError("extra_body debe ser un objeto JSON.")
 
     prompt_path = Path(prompt_value).expanduser()
     if not prompt_path.is_absolute():
         prompt_path = config_path.parent / prompt_path
 
     return GenerationConfig(
-        provider=provider.strip().lower(),
+        provider=provider_name,
         model=model.strip(),
         system_prompt_path=prompt_path.resolve(),
         temperature=float(temperature),
         max_output_tokens=max_output_tokens,
         timeout_seconds=float(timeout_seconds),
         api_key_env=api_key_env.strip(),
+        base_url=base_url,
+        extra_headers=dict(extra_headers),
+        extra_body=dict(extra_body),
     )
