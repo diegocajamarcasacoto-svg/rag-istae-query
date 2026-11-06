@@ -1,15 +1,47 @@
 # RAG ISTAE Query
 
-Consulta de solo lectura: E5 (`query:`) + BM25 nativo de Qdrant sobre `payload.text` -> RRF (`k=60`) -> BGE CrossEncoder. No crea colecciones, indices ni puntos.
+Pipeline de consulta **de solo lectura** del sistema RAG sobre el corpus normativo del ISTAE: E5 (`query:`) + BM25 nativo de Qdrant sobre `payload.text` -> RRF (`k=60`) -> reranker BGE (CrossEncoder, opcional) -> Context Builder -> generación con Gemini. No crea colecciones, índices ni puntos.
+
+La colección `istae_chunks_e5_base` la genera `rag_istae_ingestion`; los modelos y la persistencia Qdrant se administran en `rag-istae-resources`.
+
+## Arquitectura
+
+```text
+pregunta
+   │  retrieval.encode_query (E5, prefijo "query:", normalizado)
+   ▼
+retrieval.hybrid_search ── Prefetch vectorial + Prefetch TextQuery(text) ── RRF k=60 ──► candidate_k candidatos
+   │
+   ▼
+reranking.rerank (CrossEncoder BGE, CPU)            ← se omite con --no-rerank
+   │
+   ▼
+context.build_context (semillas + vecinos del mismo documento, validación estructural, presupuesto de tokens)
+   │
+   ▼
+generation.generate_answer (System Prompt externo + Gemini vía google-genai)
+```
+
+| Módulo | Responsabilidad |
+|---|---|
+| `src/query/config.py` | Carga `config/local.json`, valida claves obligatorias y resuelve rutas absolutas. |
+| `src/query/retrieval.py` | Carga E5, abre el cliente Qdrant y ejecuta búsqueda vectorial, BM25 e híbrida con RRF. |
+| `src/query/reranking.py` | Carga el CrossEncoder local y reordena los candidatos por score. |
+| `src/query/context/` | Context Builder: detector y validador de estructura (artículo, capítulo, sección, listas, notas), expansión de vecinos, fusión, deduplicación y presupuesto de tokens. |
+| `src/query/generation/` | Configuración, construcción del prompt, adaptador de proveedor (`providers/gemini.py`), normalización de respuestas y errores explícitos (`GenerationConfigurationError`, `GenerationProviderError`). |
+| `scripts/` | Ejecutables de línea de comandos de cada etapa y del pipeline completo. |
+
+Modelo de reranking actual: `bge-reranker-base` (más liviano que `bge-reranker-v2-m3`, que se utilizó en las primeras pruebas). El modelo se toma de `reranker_model_path` o de `--reranker-model`.
 
 ## Instalacion
 
 1. Clone este repositorio y cree un entorno virtual Python 3.11.
-2. Instale `pip install -r requirements.txt`.
+2. Instale `pip install -r requirements.txt` (`sentence-transformers`, `qdrant-client`, `torch`, `google-genai`).
 3. Prepare y valide `rag-istae-resources`.
 4. Copie `config/local.example.json` a `config/local.json` y asigne rutas absolutas al E5, BGE y Qdrant compartidos.
+5. Para generar respuestas, copie `config/generation.example.json` a `config/generation.json` y defina la variable de entorno `GEMINI_API_KEY`.
 
-Con los recursos ya disponibles, funciona offline; los scripts nunca descargan modelos. Ejemplos:
+Todos los scripts usan `config/local.json` por defecto y aceptan `--config` para indicar otra ruta. Con los recursos ya disponibles, la recuperación funciona offline; los scripts nunca descargan modelos. Solo la generación requiere conexión. Ejemplos:
 
 ```powershell
 python .\scripts\search_vectors.py "Art. 357 Constitucion" 
@@ -108,7 +140,7 @@ print(answer.context_result.metadata)
 
 El modelo recibe solo la pregunta y `ContextResult.context`, empaquetados como datos JSON; la metadata y los chunks se retienen en `GenerationResult.context_result` para trazabilidad. El System Prompt indica que el contexto es material documental no confiable y que las instrucciones contenidas en él no deben obedecerse. Las métricas de tokens se reportan solo si Gemini las incluye; `application_latency_ms` es una medición local del tiempo de la solicitud. Una llamada real a Gemini requiere credenciales y puede generar costos.
 
-Para ejecutar una pregunta a través del pipeline RAG completo (E5 + recuperación híbrida en Qdrant + reranking BGE + Context Builder + generación Gemini), utilice `scripts/query_rag.py`. Asegúrese de haber instalado `requirements.txt`, de tener la configuración local de E5/Qdrant y de definir `GEMINI_API_KEY` en el entorno. El script usa `config/generation.example.json` por defecto; puede copiarlo a `config/generation.json` y pasar esa ruta explícitamente:
+Para ejecutar una pregunta a través del pipeline RAG completo (E5 + recuperación híbrida en Qdrant + reranking BGE + Context Builder + generación Gemini), utilice `scripts/query_rag.py`. Asegúrese de haber instalado `requirements.txt`, de tener la configuración local de E5/Qdrant y de definir `GEMINI_API_KEY` en el entorno. El script usa `config/local.json` y `config/generation.json` por defecto; `--generation-config` permite indicar otro archivo. Acepta además los mismos parámetros de recuperación y contexto que `validate_context_pipeline.py` (`--top-k`, `--candidate-k`, `--prefetch-k`, `--rrf-k`, `--batch-size`, `--reranker-model`, `--rerank/--no-rerank`, `--seed-k`, `--neighbors-before`, `--neighbors-after`, `--max-context-tokens`, `--json-output`):
 
 ```powershell
 $env:PYTHONPATH = "src;scripts"
@@ -122,12 +154,32 @@ La respuesta se muestra junto con las fuentes del contexto y los tiempos de ejec
 
 ## Pruebas y estado de validación
 
-Las pruebas unitarias del Context Builder se pueden ejecutar sin conectar a Qdrant:
+Las pruebas unitarias se ejecutan sin conectar a Qdrant ni a Gemini:
 
 ```powershell
 $env:PYTHONPATH = "src;scripts"
+python -m unittest discover -s tests -p "test_*.py" -v              # suite completa (34 pruebas)
 python -m unittest discover -s tests -p "test_context_builder.py" -v
 python -m unittest discover -s tests -p "test_generation.py" -v
+python -m unittest discover -s tests -p "test_structure_detector.py" -v
 ```
 
+`tests/test_configuration.py` está escrita con el fixture `tmp_path` de pytest y no se ejecuta con `unittest`; requiere instalar `pytest`, que no forma parte de `requirements.txt`.
+
 Los tests usan mocks/fakes y no requieren conectar con Gemini o Qdrant, reindexar ni cambiar la colección. Se verifican selección de semillas, filtros de vecinos, continuidad y límites estructurales, complementarios condicionales, deduplicación, trazabilidad, presupuesto, metadata ausente, tiempos, exportación y normalización de respuestas del proveedor. La ejecución de pruebas no implica por sí sola una evaluación semántica del contexto ni una solicitud real a Gemini.
+
+## Estado actual
+
+| Componente | Estado |
+|---|---|
+| Búsqueda vectorial E5 | Implementada |
+| BM25 nativo de Qdrant | Implementado |
+| Recuperación híbrida con RRF | Implementada |
+| Reranking BGE (`bge-reranker-base`) | Implementado, opcional (`--no-rerank`) |
+| Inspección de chunks y vecinos | Implementada (`inspect_qdrant.py`) |
+| Context Builder | Implementado, con pruebas unitarias |
+| Generación con Gemini | Implementada (`query_rag.py`), con pruebas unitarias |
+| Evaluación sistemática con Gold Standard | En curso: ver `Guia_Pruebas_Recuperación.md` |
+| Servicio persistente (modelos y Qdrant cargados una sola vez) | Pendiente |
+
+Cada ejecución de script carga E5, BGE y abre Qdrant de nuevo; en las mediciones iniciales esa inicialización representó la mayor parte de la latencia (del orden de 4–5 s por cada recurso), mientras que la búsqueda híbrida tomó alrededor de 0,3 s. La evaluación de la recuperación (vectorial, BM25, híbrida e híbrida con reranking frente al Gold Standard) se describe en [Guia_Pruebas_Recuperación.md](Guia_Pruebas_Recuperación.md).
