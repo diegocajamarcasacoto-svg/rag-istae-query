@@ -45,6 +45,7 @@ INDEX_COLUMNS: tuple[str, ...] = (
     "prefetch_k",
     "rrf_k",
     "expansion",
+    "retrieval_mode",
     "seed_k",
     "neighbors_before",
     "neighbors_after",
@@ -53,10 +54,14 @@ INDEX_COLUMNS: tuple[str, ...] = (
     "n_context_chunks",
     "context_chunk_ids",
     "context_tokens",
+    "hierarchy_unit_ids",
     "input_tokens",
     "output_tokens",
     "finish_reason",
+    "hierarchy_ms",
     "generation_ms",
+    "load_ms",
+    "execution_ms",
     "total_ms",
     "answer",
     "detail_file",
@@ -72,6 +77,63 @@ def new_run_id(now: datetime | None = None) -> str:
     """Identificador ordenable por fecha: ``YYYYMMDD-HHMMSS_<6 hex>``."""
     moment = now or datetime.now()
     return f"{moment:%Y%m%d-%H%M%S}_{secrets.token_hex(3)}"
+
+
+# Agrupación de las etapas de query_rag.py.
+# Carga: se paga una vez por proceso; en un servicio persistente (modelos, índice
+# y Qdrant en memoria) deja de contar por consulta. Ejecución: se paga en cada consulta.
+LOAD_STAGES: tuple[str, ...] = (
+    "configuration_load",
+    "e5_load",
+    "reranker_load",
+    "catalog_load",
+    "units_load",
+    "qdrant_open",
+)
+EXECUTION_STAGES: tuple[str, ...] = (
+    "query_embedding",
+    "hybrid_retrieval_and_rrf",
+    "reranking",
+    "context_builder",
+    "hierarchy",
+    "presentation",
+    "generation",
+)
+# Subetapas ya contenidas en otra etapa: se muestran, pero no se suman.
+NESTED_STAGES: dict[str, str] = {"hierarchy_search": "hierarchy"}
+
+
+def _seconds(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def group_timings(timings: dict[str, Any]) -> dict[str, Any]:
+    """Separa los tiempos en carga y ejecución, con sus subtotales (segundos).
+
+    Las etapas no ejecutadas (``None``) se conservan pero no suman. Una etapa
+    desconocida va a ``other`` para no perderla.
+    """
+    known = {*LOAD_STAGES, *EXECUTION_STAGES, *NESTED_STAGES, "total"}
+    load = {stage: timings[stage] for stage in LOAD_STAGES if stage in timings}
+    execution = {stage: timings[stage] for stage in EXECUTION_STAGES if stage in timings}
+    nested = {stage: timings[stage] for stage in NESTED_STAGES if stage in timings}
+    other = {stage: value for stage, value in timings.items() if stage not in known}
+
+    def subtotal(stages: dict[str, Any]) -> float | None:
+        values = [v for v in (_seconds(value) for value in stages.values()) if v is not None]
+        return sum(values) if values else None
+
+    return {
+        "load": load,
+        "load_total": subtotal(load),
+        "execution": execution,
+        "execution_total": subtotal(execution),
+        "nested": nested,
+        "other": other,
+        "total": timings.get("total"),
+    }
 
 
 def _ms(seconds: Any) -> int | None:
@@ -90,9 +152,12 @@ def build_index_row(record: dict[str, Any]) -> dict[str, Any]:
     generation_config = record.get("generation_config") or {}
     generation = record.get("generation_result") or {}
     metrics = generation.get("provider_metrics") or {}
-    context = generation.get("context_result") or {}
+    # Sin generación (--no-generation o fallo del LLM) el contexto va aparte.
+    context = generation.get("context_result") or record.get("context_result") or {}
     chunks = context.get("chunks") or []
+    hierarchy_units = ((context.get("metadata") or {}).get("hierarchy") or {}).get("units") or []
     timings = record.get("timings_seconds") or {}
+    grouped = group_timings(timings)
     error = record.get("error") or {}
     retrieval = record.get("retrieval_results")
     extra_body = generation_config.get("extra_body")
@@ -124,6 +189,7 @@ def build_index_row(record: dict[str, Any]) -> dict[str, Any]:
         "prefetch_k": args.get("prefetch_k"),
         "rrf_k": args.get("rrf_k"),
         "expansion": (args.get("expansion") or "neighbors") if args else None,
+        "retrieval_mode": (args.get("retrieval_mode") or "hybrid") if args else None,
         "seed_k": args.get("seed_k"),
         "neighbors_before": args.get("neighbors_before"),
         "neighbors_after": args.get("neighbors_after"),
@@ -134,10 +200,16 @@ def build_index_row(record: dict[str, Any]) -> dict[str, Any]:
             "|".join(str(chunk.get("chunk_id")) for chunk in chunks) if chunks else None
         ),
         "context_tokens": ((context.get("metadata") or {}).get("metrics") or {}).get("token_count"),
+        "hierarchy_unit_ids": (
+            "|".join(str(unit.get("unit_id")) for unit in hierarchy_units) if hierarchy_units else None
+        ),
         "input_tokens": metrics.get("input_tokens"),
         "output_tokens": metrics.get("output_tokens"),
         "finish_reason": generation.get("finish_reason"),
+        "hierarchy_ms": _ms(timings.get("hierarchy")),
         "generation_ms": _ms(timings.get("generation")),
+        "load_ms": _ms(grouped["load_total"]),
+        "execution_ms": _ms(grouped["execution_total"]),
         "total_ms": _ms(timings.get("total")),
         "answer": generation.get("answer"),
         "detail_file": record.get("detail_file"),

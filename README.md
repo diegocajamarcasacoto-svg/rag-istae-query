@@ -35,7 +35,10 @@ reranking.rerank (CrossEncoder BGE, CPU)            ← se omite con --no-rerank
    ▼
 context.build_context (semillas + vecinos, --expansion neighbors)   ó   units.build_unit_context (artículo completo, --expansion units)
    │
-   ▼
+   ▼  solo --retrieval-mode hierarchical (arquitectura C)
+hierarchy.expand_with_hierarchy (catálogo → normas superiores → búsqueda filtrada por document_id → +artículos)
+   │
+   ▼  se omite con --no-generation
 generation.generate_answer (System Prompt externo + Gemini vía google-genai)
 ```
 
@@ -45,6 +48,7 @@ generation.generate_answer (System Prompt externo + Gemini vía google-genai)
 | `src/query/retrieval.py` | Carga E5, abre el cliente Qdrant y ejecuta búsqueda vectorial, BM25 e híbrida con RRF. |
 | `src/query/reranking.py` | Carga el CrossEncoder local y reordena los candidatos por score. |
 | `src/query/units.py` | Expansión por artículo (*small-to-big*): índice `chunk_id → unidad` desde `units.jsonl` y construcción del contexto con artículos completos. |
+| `src/query/hierarchy/` | Recuperación jerárquica (arquitectura C): `catalog.py` carga el catálogo normativo (rangos y relaciones); `expansion.py` calcula las normas superiores relacionadas y agrega sus artículos. |
 | `src/query/context/` | Context Builder: detector y validador de estructura (artículo, capítulo, sección, listas, notas), expansión de vecinos, fusión, deduplicación y presupuesto de tokens. |
 | `src/query/generation/` | Configuración, construcción del prompt, adaptador de proveedor (`providers/gemini.py`), normalización de respuestas y errores explícitos (`GenerationConfigurationError`, `GenerationProviderError`). |
 | `scripts/` | Ejecutables de línea de comandos de cada etapa y del pipeline completo. |
@@ -146,6 +150,96 @@ python .\scripts\query_rag.py "¿Qué requisitos necesito cumplir para que me de
 
 `--expansion neighbors` (predeterminado) conserva el Context Builder como línea base de comparación.
 
+## Recuperación jerárquica (`--retrieval-mode hierarchical`, arquitectura C)
+
+`--retrieval-mode hybrid` (predeterminado) corresponde a la arquitectura B. `hierarchical` corresponde a C: parte del mismo contexto por artículos y le **agrega artículos de las normas de rango superior** relacionadas con las normas recuperadas. Implica `--expansion units`.
+
+1. **Normas destino:** desde los `document_id` del contexto base se siguen las relaciones del catálogo normativo solo hacia normas de **rango estrictamente superior** (número menor), hasta `--hierarchy-depth` saltos (2 por defecto). Las relaciones se eligen con `--hierarchy-relations` (`desarrolla`, `compatible`; por defecto ambas). No se vuelven a buscar normas ya presentes en el contexto base, y el recorrido no entra en ciclos.
+2. **Búsqueda acotada:** la misma pregunta (mismo vector, BM25, RRF y reranker) se busca con filtro por esas normas (`hybrid_search(..., document_ids=...)`, solo lectura). Hay dos estrategias en `--hierarchy-search`:
+   - `joint` (predeterminada): una sola búsqueda con 20 candidatos en total;
+   - `per-document`: una búsqueda por norma, con 5 candidatos por norma y rerank conjunto.
+
+   `--hierarchy-candidate-k` cambia esas cantidades.
+3. **Selección:**
+   - `--hierarchy-max-units` (3) y `--hierarchy-max-per-document` (1) limitan las unidades nuevas, y `--hierarchy-min-score` (sin mínimo por defecto) descarta las de baja puntuación del reranker;
+   - las unidades se suben a artículos con `build_unit_context`, con su propio presupuesto `--hierarchy-max-tokens` (1.500), aparte del contexto base;
+   - los descartes y sus motivos quedan en `metadata["hierarchy"]["skipped"]`.
+
+**Tiempos:** la expansión jerárquica es una etapa propia, separada de `context_builder`, que mide solo la expansión base, igual que en B. Hay dos valores:
+- `hierarchy`: búsqueda filtrada, rerank, selección y subida a artículos;
+- `hierarchy_search`: la búsqueda con su rerank, contenida en `hierarchy`.
+
+En CPU domina el rerank: unos 4,6 s de 4,8 s en la pregunta del egresado con `joint`. En el índice figura como `hierarchy_ms`.
+
+**No se impulsa por rango:** el rango decide *dónde* se busca, no el orden de los resultados. El contexto incluye el rango en el encabezado de cada unidad (`… · Jerarquía 6: Reglamento o normativa interna`). Los artículos agregados van al final, bajo `=== NORMAS DE RANGO SUPERIOR RELACIONADAS ===`, con `role="hierarchy"`. El orden por rango y la regla del art. 425 corresponden a quien arma el prompt final (`rag-istae-api` en B/C).
+
+**Catálogo:** es una copia de `catalogo_normativo.json` de `rag-istae-api`, generado desde `Matriz_Reglamentos_TESIS_ISTAE_v5.xlsx`. Tiene 46 normas, 214 relaciones y rangos 2–6: el corpus no incluye la Constitución. Los rangos figuran como «pendiente de validación jurídica». Se importa a `storage/catalog/` verificando que su `source_sha256` coincida con la matriz de `storage/corpus` (el script solo lee la API):
+
+```powershell
+python .\scripts\import_catalog.py --source <rag-istae-api>\data\catalogo_normativo.json --matrix <storage>\corpus\Matriz_Reglamentos_TESIS_ISTAE_v5.xlsx --dest <storage>\catalog\catalogo_normativo.json
+```
+
+La ruta se configura en `catalog_path` de `config/local.json`, o con `--catalog-path`. El registro guarda el `sha256` del catálogo usado.
+
+**Exploración sin LLM:** `--no-generation` ejecuta recuperación y contexto sin llamar al modelo ni requerir clave. Imprime las normas destino, las unidades agregadas y los descartes, y registra el contexto en `logs/` (`context_result`). `--show-context` imprime además el texto del contexto.
+
+```powershell
+python .\scripts\query_rag.py "¿Qué requisitos necesito cumplir para que me declaren egresado?" --retrieval-mode hierarchical --no-generation --show-context --tag explor-c
+python .\scripts\query_rag.py "¿Qué requisitos necesito cumplir para que me declaren egresado?" --retrieval-mode hierarchical --hierarchy-search per-document --hierarchy-min-score 0.3 --no-generation --tag explor-c-doc
+```
+
+**Observación inicial (2026-11-06), con la pregunta del egresado y sin LLM:**
+- Las normas destino fueron 8 (EXT01, EXT02, EXT03, EXT04, EXT12, EXT13, EXT09 e INT01).
+- Con `joint`, 15 de los 20 candidatos fueron de EXT13. Los artículos agregados coincidían por palabras («requisitos» de ingreso del personal académico), no por tema.
+- `per-document` da más variedad, pero tarda unas 3 veces más en CPU y, con pocos candidatos por norma, puede perder el mejor resultado de una norma.
+- Hay que calibrar la estrategia, el mínimo de score y las relaciones con el Gold Standard antes de fijarlos.
+
+## Línea base B/C (LB-1, 2026-11-06)
+
+Configuración de referencia para comparar B (`hybrid`) y C (`hierarchical`). **C = B + una sola capa**: hasta 3 artículos de las normas de rango superior con las que las normas recuperadas tienen relación `Desarrolla` o `Debe ser compatible con`. Los valores son los predeterminados del CLI y `tests/test_baseline.py` los fija: cambiarlos debe ser una decisión explícita.
+
+| Etapa | Parámetro | B | C |
+|---|---|---|---|
+| Recuperación | híbrida E5 + BM25, RRF k=60, `candidate_k`=`prefetch_k`=20 | ✓ | ✓ |
+| Reranking | BGE `bge-reranker-base`, `top_k`=5 | ✓ | ✓ |
+| Expansión | `--expansion units`; contexto máx. 4.000 tokens; artículo parcial si supera 1.500 | ✓ | ✓ |
+| Jerarquía: relaciones | `Desarrolla` + `Debe ser compatible con`, solo hacia rango estrictamente superior | — | ✓ |
+| Jerarquía: profundidad | 2 saltos | — | ✓ |
+| Jerarquía: consulta y búsqueda | la pregunta del usuario; búsqueda conjunta filtrada por las normas superiores, 20 candidatos, con rerank | — | ✓ |
+| Jerarquía: selección | máx. 3 artículos, 1 por norma, 1.500 tokens aparte del contexto base; sin puntuación mínima | — | ✓ |
+| Presentación | por documentos, formato `rag-istae-api` | en orden de relevancia | como AJ: escala, orden por rango, «incluida por jerarquía», relaciones entre normas presentes |
+| Prompt (`prompt_strategy=modular`) | `config/prompts/modular/` | base + rag | base + rag + jerarquía |
+| Generación | `config/generation.openrouter.json` (Nemotron `:free`, temperatura 0,2, `max_output_tokens` 2.048, `reasoning.effort` none) | ✓ | ✓ |
+
+Por qué incluir las dos relaciones: `Desarrolla` forma un árbol fijo (reglamento interno → Estatuto → LOES) que nunca alcanza el Reglamento de Régimen Académico desde una norma interna, porque esa relación solo existe como «Debe ser compatible con». Para un reglamento interno, las normas superiores con las que debe ser coherente son las que pueden prevalecer en caso de conflicto. El riesgo, la dilución entre muchas normas destino, se controla con el tope de un artículo por norma y queda medido en `hierarchy_unit_ids`.
+
+Pendiente de decisión: la API usa `LLM_REASONING_EFFORT=medium` y `LLM_MAX_OUTPUT_TOKENS=8192`, mientras que la generación local usa `effort: none` y 2.048. Para comparar B/C con A/AJ, ambos deben coincidir.
+
+Comandos (con `--question-id` para el Gold Standard):
+
+```powershell
+python .\scripts\query_rag.py "<pregunta>" --expansion units --generation-config .\config\generation.openrouter.json --tag LB1-B --question-id Q27
+python .\scripts\query_rag.py "<pregunta>" --retrieval-mode hierarchical --generation-config .\config\generation.openrouter.json --tag LB1-C --question-id Q27
+```
+
+Protocolo:
+1. Ejecutar B y C de la línea base sobre el Gold Standard. Las respuestas no son deterministas (con el mismo contexto, Q27 dio conclusiones distintas), así que conviene repetir las preguntas de validación cruzada.
+2. Clasificar los errores de C frente a B: norma superior irrelevante, norma correcta con artículo equivocado, conflicto mal resuelto o falsa abstención.
+3. Solo probar una variante si responde a un error observado, registrándola antes con un único factor cambiado respecto de LB-1.
+
+Hipótesis registradas, sin aplicar:
+- solo `Desarrolla`;
+- puntuación mínima de rerank (ojo: en Q27 todos los scores base fueron < 0,03);
+- búsqueda por norma;
+- otra consulta para la jerarquía.
+
+Casos pendientes de validación jurídica:
+- **Q27 (convalidación de prácticas de hace 7 años): remisión con techo.** El RRA (`EXT02-art43`) dice que las prácticas «son objeto de» convalidación «según lo establecido en la normativa interna de cada IES, hasta un máximo de diez (10) años». El ISTAE (`INT15-art22`, `INT13-art48`) fija 5 años. El texto admite dos lecturas:
+  - la IES solo regula el procedimiento y los 10 años prevalecen por jerarquía, que es la respuesta esperada del Gold Standard;
+  - la IES fija su plazo dentro del techo, y entonces valen los 5 años.
+
+  Lo debe validar un abogado. Mientras tanto, `jerarquia_es.txt` no se ajusta a ninguna de las dos lecturas: codificar el criterio en el prompt sería ajustarlo a una interpretación no validada. Para calificar Q27 se propone una rúbrica en lugar de exigir solo el plazo: identifica los dos plazos y cita ambas normas; reconoce la mayor jerarquía del RRA; explica la consecuencia según la lectura validada, o al menos la tensión entre la remisión y el máximo; e incluye el trámite de `INT15-art22`.
+
 ## Validar el pipeline completo
 
 El ejecutable independiente `scripts/validate_context_pipeline.py` conecta la configuración, E5, Qdrant, retrieval híbrido, RRF, reranker y Context Builder. Cada ejecución inicializa los modelos; sus tiempos de carga no representan consultas posteriores con los modelos ya cargados.
@@ -206,10 +300,14 @@ logs/
 `run_id` tiene la forma `YYYYMMDD-HHMMSS_<hex>`. Columnas del índice:
 - **Identificación y estado:** `run_id`, `timestamp`, `status`, `error_stage`, `error`, `tag`, `question_id`, `query`.
 - **Generación:** `provider`, `model`, `extra_body`, `temperature`, `max_output_tokens`.
-- **Recuperación y contexto:** `rerank`, `top_k`, `candidate_k`, `prefetch_k`, `rrf_k`, `seed_k`, `neighbors_before`, `neighbors_after`, `max_context_tokens`, `expansion`, `n_candidates`, `n_context_chunks`, `context_chunk_ids` (separados por `|`; en `--expansion units` son `unit_id`), `context_tokens` (estimados).
-- **Resultado y costo:** `input_tokens`, `output_tokens`, `finish_reason`, `generation_ms`, `total_ms`, `answer`, `detail_file`.
+- **Recuperación y contexto:** `rerank`, `top_k`, `candidate_k`, `prefetch_k`, `rrf_k`, `expansion`, `retrieval_mode` (`hybrid`/`hierarchical`), `seed_k`, `neighbors_before`, `neighbors_after`, `max_context_tokens`, `n_candidates`, `n_context_chunks`, `context_chunk_ids` (separados por `|`; en `--expansion units` son `unit_id`), `context_tokens` (estimados), `hierarchy_unit_ids` (unidades agregadas por jerarquía).
+- **Resultado y costo:** `input_tokens`, `output_tokens`, `finish_reason`, `hierarchy_ms` (expansión jerárquica; vacío en `hybrid`), `generation_ms`, `load_ms`, `execution_ms`, `total_ms`, `answer`, `detail_file`.
 
-Los tiempos del índice están en milisegundos enteros. Si cambian las columnas, `runs_index.csv` se regenera automáticamente desde `runs_index.jsonl`. El detalle guarda el nombre de la variable de la clave API, nunca su valor.
+Los tiempos se agrupan en dos bloques, definidos en `query.run_log.LOAD_STAGES` / `EXECUTION_STAGES` y `group_timings()`:
+- **carga** (`load_ms`): configuración, modelos E5 y reranker, catálogo, `units.jsonl` y apertura de Qdrant. Se paga una vez por proceso y desaparece por consulta en un servicio persistente que mantenga todo en memoria;
+- **ejecución** (`execution_ms`): embedding, búsqueda híbrida, rerank, contexto, jerarquía y generación. Es el costo de cada consulta.
+
+Las subetapas contenidas en otra, como `hierarchy_search` dentro de `hierarchy`, se muestran pero no se suman. La consola imprime ambos bloques con su subtotal. Con `--no-generation` las columnas de generación quedan vacías y el detalle guarda el contexto en `context_result`. Los tiempos del índice están en milisegundos enteros. Si cambian las columnas, `runs_index.csv` se regenera automáticamente desde `runs_index.jsonl`. El detalle guarda el nombre de la variable de la clave API, nunca su valor.
 
 Opciones:
 - `--tag` (opcional): etiqueta del experimento.
@@ -225,6 +323,36 @@ python .\scripts\query_rag.py "¿Qué requisitos establece el artículo 18?" --g
 import pandas as pd
 runs = pd.read_json("logs/runs_index.jsonl", lines=True)
 ```
+
+### Estrategia de prompt (`prompt_strategy`)
+
+El JSON de generación elige cómo se arma el mensaje al modelo:
+
+| `prompt_strategy` | `system_prompt_path` | Armado |
+|---|---|---|
+| `single` (predeterminada) | archivo (`prompts/system_prompt_es.txt`) | System Prompt único; la pregunta y el contexto van como JSON en el mensaje del usuario. |
+| `modular` | carpeta (`prompts/modular/`) | Mismo armado que `rag-istae-api`: las instrucciones y `<documentos>…</documentos>` en el system; `<pregunta>…</pregunta>` y el recordatorio en el mensaje del usuario. Requiere `--expansion units`. |
+
+`config/generation.openrouter.example.json` usa `modular`. Es la estrategia recomendada para B/C, la que se propondrá a `rag-istae-api` (Fase 5). Los prompts se componen igual que en el diseño 2×2 de la API:
+
+| | Sin jerarquía | Con jerarquía |
+|---|---|---|
+| Contexto largo (API) | A = base | AJ = base + jerarquía |
+| RAG (este repo) | B = `base_es` + `rag_es` | C = `base_es` + `rag_es` + `jerarquia_es` |
+
+- `base_es.txt` y `recordatorio_es.txt` son **copias sin cambios** de `rag-istae-api/prompts`, con las mismas reglas de cita (`[unit_id]` y la sección «Fuentes:»), la misma frase de abstención y el mismo formato que verifica la API.
+- `rag_es.txt` (nuevo) aclara que el contexto es **una selección de artículos**, no la normativa completa.
+  - La frase de abstención «No encontré en la normativa disponible», la que detecta la API, se reserva para cuando **ningún** artículo es pertinente. Así se evita la falsa abstención observada en Q27.
+  - Si la información es parcial, ambigua o hay disposiciones que difieren, se responde lo que se puede afirmar y se señala lo que no.
+  - Pide no suponer el contenido de artículos que no aparecen.
+- `jerarquia_es.txt` (versión corregida respecto de la API) aplica la escala de rangos y la prevalencia **solo con los documentos proporcionados**. No invoca el art. 425 de la Constitución, que no está en el corpus y no se puede verificar como cita. También explica qué significan las normas «incluida por jerarquía».
+
+Con `--expansion units`, el contexto se presenta **por documentos** (`query.presentation.render_documents`), en el mismo formato que la API:
+- `=== [INT08] Reglamento de Titulación y Graduación ===` y, debajo, `[INT08-art12] Artículo 12. …`;
+- en B, los documentos van en orden de relevancia;
+- en C, como en AJ: la escala al inicio, los documentos por rango con rango y emisor en el encabezado, la marca `· incluida por jerarquía` en las normas que solo aportan artículos superiores, y al final `=== RELACIONES ENTRE NORMAS ===`, solo con las relaciones entre normas presentes.
+
+Los nombres, rangos y emisores salen del catálogo (`catalog_path`). En B, sin catálogo, se usa el `document_id`. La etapa se mide como `presentation`.
 
 ### Cambiar de proveedor o modelo
 
@@ -250,7 +378,7 @@ Las pruebas unitarias se ejecutan sin conectar a Qdrant ni a Gemini:
 
 ```powershell
 $env:PYTHONPATH = "src;scripts"
-python -m unittest discover -s tests -p "test_*.py" -v              # suite completa (72 pruebas)
+python -m unittest discover -s tests -p "test_*.py" -v              # suite completa (103 pruebas)
 python -m unittest discover -s tests -p "test_context_builder.py" -v
 python -m unittest discover -s tests -p "test_generation.py" -v
 python -m unittest discover -s tests -p "test_structure_detector.py" -v
@@ -271,6 +399,7 @@ Los tests usan mocks/fakes y no requieren conectar con Gemini o Qdrant, reindexa
 | Inspección de chunks y vecinos | Implementada (`inspect_qdrant.py`) |
 | Context Builder (expansión por vecinos) | Implementado, con pruebas unitarias |
 | Expansión por artículo (`--expansion units`) | Implementada, con pruebas unitarias; pendiente de evaluar contra el Gold Standard |
+| Recuperación jerárquica (`--retrieval-mode hierarchical`, arquitectura C) | Implementada, con pruebas unitarias; en exploración (estrategia de búsqueda y mínimo de score por calibrar) |
 | Generación con Gemini | Implementada (`query_rag.py`), con pruebas unitarias |
 | Generación con OpenRouter (Nemotron) | Implementada (`--generation-config`), con pruebas unitarias; sin validación real |
 | Evaluación sistemática con Gold Standard | En curso: ver `Guia_Pruebas_Recuperación.md` |

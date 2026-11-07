@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 
-ChunkRole = Literal["seed", "expanded", "complementary"]
+ChunkRole = Literal["seed", "expanded", "complementary", "hierarchy"]
 
 
 @dataclass

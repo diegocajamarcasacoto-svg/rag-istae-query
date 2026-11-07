@@ -14,7 +14,7 @@ from query.context.models import ContextChunk, ContextResult
 from query.generation.errors import GenerationProviderError
 from query.generation.generation_config import GenerationConfig
 from query.generation.models import GenerationResult, ProviderMetrics
-from query.run_log import INDEX_COLUMNS, build_index_row, new_run_id, write_run
+from query.run_log import INDEX_COLUMNS, build_index_row, group_timings, new_run_id, write_run
 
 import query_rag
 
@@ -57,6 +57,30 @@ def _record(run_id: str, **overrides) -> dict:
 def _read_csv(path: Path) -> list[dict]:
     with path.open(encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle, delimiter=";"))
+
+
+class GroupTimingsTests(unittest.TestCase):
+    def test_splits_load_and_execution_without_double_counting(self) -> None:
+        timings = {
+            "configuration_load": 0.5, "e5_load": 3.0, "reranker_load": None, "qdrant_open": 1.5,
+            "query_embedding": 0.25, "reranking": 1.0, "context_builder": 0.0,
+            "hierarchy": 2.0, "hierarchy_search": 1.75, "generation": None, "nueva_etapa": 9.0, "total": 18.0,
+        }
+        grouped = group_timings(timings)
+        self.assertEqual(grouped["load_total"], 5.0)
+        self.assertEqual(grouped["execution_total"], 3.25)  # sin hierarchy_search ni None
+        self.assertEqual(list(grouped["load"]), ["configuration_load", "e5_load", "reranker_load", "qdrant_open"])
+        self.assertEqual(grouped["nested"], {"hierarchy_search": 1.75})
+        self.assertEqual(grouped["other"], {"nueva_etapa": 9.0})
+        self.assertEqual(grouped["total"], 18.0)
+
+    def test_index_row_has_load_and_execution_ms(self) -> None:
+        row = build_index_row({"timings_seconds": {"e5_load": 2.0, "reranking": 0.5, "generation": 1.0}})
+        self.assertEqual(row["load_ms"], 2000)
+        self.assertEqual(row["execution_ms"], 1500)
+        empty = build_index_row({})
+        self.assertIsNone(empty["load_ms"])
+        self.assertIsNone(empty["execution_ms"])
 
 
 class RunLogTests(unittest.TestCase):

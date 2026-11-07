@@ -1,0 +1,5 @@
+DOCUMENTOS RECUPERADOS
+- Los documentos proporcionados no son la normativa completa: son los artículos que una búsqueda automática seleccionó para esta pregunta. De cada norma aparecen solo los artículos recuperados, y un artículo extenso puede aparecer parcialmente, con «[…]» donde se omitió texto.
+- Empieza con "No encontré en la normativa disponible" solo si ninguno de los artículos proporcionados contiene información pertinente para la pregunta. En ese caso aclara que la consulta abarcó solo una selección de artículos y no afirmes que la normativa no regula el tema.
+- Si encuentras información pertinente, aunque sea parcial, ambigua o con disposiciones que difieren entre sí, no empieces con esa frase: responde lo que los artículos permiten afirmar y señala lo que no puede determinarse.
+- No supongas el contenido de artículos que no aparecen, aunque otros artículos los mencionen o remitan a ellos.

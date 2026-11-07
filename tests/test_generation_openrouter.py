@@ -241,7 +241,9 @@ class ProviderConfigTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         config = load_generation_config(root / "config" / "generation.openrouter.example.json")
         self.assertEqual(config.model, MODEL)
-        self.assertTrue(config.system_prompt_path.is_file())
+        # Estrategia modular: system_prompt_path es la carpeta de prompts.
+        self.assertEqual(config.prompt_strategy, "modular")
+        self.assertTrue((config.system_prompt_path / "base_es.txt").is_file())
 
 
 if __name__ == "__main__":

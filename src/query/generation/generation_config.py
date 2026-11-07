@@ -17,6 +17,11 @@ DEFAULT_API_KEY_ENV = {
 DEFAULT_BASE_URL = {
     "openrouter": "https://openrouter.ai/api/v1",
 }
+# single: un System Prompt único (system_prompt_path es un archivo) y la pregunta
+#   con el contexto como JSON.
+# modular: mismo armado que rag-istae-api (system_prompt_path es una carpeta con
+#   base_es.txt, rag_es.txt, jerarquia_es.txt y recordatorio_es.txt).
+PROMPT_STRATEGIES = ("single", "modular")
 
 
 @dataclass(frozen=True)
@@ -24,7 +29,8 @@ class GenerationConfig:
     """Opciones para una solicitud de generación.
 
     ``system_prompt_path`` se resuelve respecto del archivo JSON que declara
-    la ruta. La credencial no se almacena aquí: ``api_key_env`` nombra la
+    la ruta: un archivo con ``prompt_strategy="single"`` o una carpeta de
+    prompts con ``"modular"``. La credencial no se almacena aquí: ``api_key_env`` nombra la
     variable de entorno que consulta el adaptador del proveedor.
 
     ``base_url``, ``extra_headers`` y ``extra_body`` solo los usan los
@@ -42,6 +48,7 @@ class GenerationConfig:
     base_url: str | None = None
     extra_headers: dict[str, str] = field(default_factory=dict)
     extra_body: dict[str, Any] = field(default_factory=dict)
+    prompt_strategy: str = "single"
 
 
 def load_generation_config(path: Path) -> GenerationConfig:
@@ -124,6 +131,10 @@ def load_generation_config(path: Path) -> GenerationConfig:
     if not isinstance(extra_body, dict):
         raise TypeError("extra_body debe ser un objeto JSON.")
 
+    prompt_strategy = data.get("prompt_strategy", "single")
+    if prompt_strategy not in PROMPT_STRATEGIES:
+        raise ValueError(f"prompt_strategy debe ser uno de: {', '.join(PROMPT_STRATEGIES)}.")
+
     prompt_path = Path(prompt_value).expanduser()
     if not prompt_path.is_absolute():
         prompt_path = config_path.parent / prompt_path
@@ -139,4 +150,5 @@ def load_generation_config(path: Path) -> GenerationConfig:
         base_url=base_url,
         extra_headers=dict(extra_headers),
         extra_body=dict(extra_body),
+        prompt_strategy=prompt_strategy,
     )

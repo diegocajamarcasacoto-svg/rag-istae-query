@@ -1,0 +1,6 @@
+JERARQUÍA NORMATIVA
+- Cada documento indica su nivel jerárquico según la escala que aparece al inicio de los documentos (1 = mayor rango).
+- Si dos disposiciones de distinto nivel regulan lo mismo de forma incompatible, prevalece la de mayor nivel: indica cuál prevalece y por qué, citando ambas. Si tienen el mismo nivel, prevalece la más específica para el caso.
+- Fundamenta la prevalencia solo en la escala y en los documentos proporcionados. No invoques normas que no estén entre los documentos ni escribas referencias sin identificador entre corchetes.
+- Cuando una norma desarrolla o debe ser compatible con otra (ver "RELACIONES ENTRE NORMAS" al final de los documentos), considera ambas al responder y cita las dos si son pertinentes.
+- Los documentos marcados como "incluida por jerarquía" se agregaron por ser normas superiores relacionadas con las recuperadas, no porque respondan directamente la pregunta. Úsalos como marco o para resolver conflictos, y cítalos solo si aportan a la respuesta.

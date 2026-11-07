@@ -201,6 +201,7 @@ class QueryRagUnitsTests(unittest.TestCase):
         context = captured["context"]
         self.assertEqual([c.chunk_id for c in context.chunks], ["INT08-art12"])
         self.assertEqual(row["expansion"], "units")
+        self.assertEqual(row["hierarchy_ms"], "")  # sin jerarquía en modo hybrid
         self.assertEqual(row["context_chunk_ids"], "INT08-art12")
         self.assertEqual(row["context_tokens"], str(context.metadata["metrics"]["token_count"]))
 

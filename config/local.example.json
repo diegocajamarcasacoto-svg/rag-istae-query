@@ -3,6 +3,7 @@
   "reranker_model_path": "C:/RAG-ISTAE/storage/models/bge-reranker-base",
   "qdrant_path": "C:/RAG-ISTAE/storage/vector_store/qdrant",
   "units_path": "C:/RAG-ISTAE/storage/outputs/units.jsonl",
+  "catalog_path": "C:/RAG-ISTAE/storage/catalog/catalogo_normativo.json",
   "collection_name": "istae_chunks_e5_base",
   "normalize_embeddings": true,
   "max_seq_length": 512

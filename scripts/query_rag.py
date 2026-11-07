@@ -15,12 +15,16 @@ sys.path.insert(0, str(ROOT / "src"))
 from query.config import load_config
 from query.context import build_context
 from query.generation import generate_answer, load_generation_config
+from query.hierarchy import expand_with_hierarchy, load_catalog, resolve_relations
+from query.hierarchy.catalog import file_sha256
+from query.presentation import render_documents
 from query.reranking import load_reranker, rerank
 from query.retrieval import encode_query, hybrid_search, load_e5, open_client
-from query.run_log import new_run_id, write_run
+from query.run_log import NESTED_STAGES, group_timings, new_run_id, write_run
 from query.units import build_unit_context, load_units, qdrant_chunk_fetcher
 
 DEFAULT_UNITS_MAX_CONTEXT_TOKENS = 4000
+DEFAULT_HIERARCHY_RELATIONS = "desarrolla,compatible"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -70,11 +74,61 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--expansion",
         choices=("neighbors", "units"),
-        default="neighbors",
         help=(
             "neighbors: Context Builder (semillas + vecinos heurísticos). "
-            "units: cada chunk recuperado se sube a su artículo según units.jsonl (small-to-big)."
+            "units: cada chunk recuperado se sube a su artículo según units.jsonl (small-to-big). "
+            "Predeterminado: neighbors en --retrieval-mode hybrid; units en hierarchical."
         ),
+    )
+    parser.add_argument(
+        "--retrieval-mode",
+        choices=("hybrid", "hierarchical"),
+        default="hybrid",
+        help=(
+            "hybrid: arquitectura B. hierarchical: arquitectura C, que agrega unidades de las "
+            "normas de rango superior relacionadas (catálogo normativo); requiere --expansion units."
+        ),
+    )
+    parser.add_argument(
+        "--catalog-path",
+        type=Path,
+        help="catalogo_normativo.json (por defecto, catalog_path de --config).",
+    )
+    parser.add_argument(
+        "--hierarchy-relations",
+        default=DEFAULT_HIERARCHY_RELATIONS,
+        help="Relaciones del catálogo a seguir, separadas por coma: desarrolla, compatible.",
+    )
+    parser.add_argument("--hierarchy-depth", type=int, default=2,
+                        help="Saltos máximos hacia normas superiores (predeterminado: 2).")
+    parser.add_argument("--hierarchy-max-units", type=int, default=3,
+                        help="Unidades de normas superiores que se agregan como máximo.")
+    parser.add_argument("--hierarchy-max-per-document", type=int, default=1,
+                        help="Unidades por norma superior como máximo.")
+    parser.add_argument("--hierarchy-max-tokens", type=int, default=1500,
+                        help="Presupuesto estimado de tokens de las unidades de jerarquía (aparte del base).")
+    parser.add_argument(
+        "--hierarchy-search",
+        choices=("joint", "per-document"),
+        default="joint",
+        help=(
+            "joint: una búsqueda filtrada por todas las normas superiores (más rápida; una norma puede "
+            "acaparar los candidatos). per-document: una búsqueda por norma, rerank conjunto (más variedad)."
+        ),
+    )
+    parser.add_argument("--hierarchy-candidate-k", type=int,
+                        help="Candidatos de la búsqueda de jerarquía: total en joint (20), por norma en per-document (5).")
+    parser.add_argument("--hierarchy-min-score", type=float,
+                        help="Puntuación mínima del reranker para agregar una unidad superior (sin mínimo por defecto).")
+    parser.add_argument(
+        "--no-generation",
+        action="store_true",
+        help="Solo recuperación y contexto: no llama al LLM ni requiere clave de API.",
+    )
+    parser.add_argument(
+        "--show-context",
+        action="store_true",
+        help="Imprime el texto del contexto que se envía (o se enviaría) al LLM.",
     )
     parser.add_argument(
         "--units-path",
@@ -133,10 +187,30 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
         parser.error("--max-context-tokens debe ser positivo.")
     if args.max_unit_tokens < 1:
         parser.error("--max-unit-tokens debe ser positivo.")
+    if args.retrieval_mode == "hierarchical":
+        if args.expansion == "neighbors":
+            parser.error("--retrieval-mode hierarchical requiere --expansion units.")
+        args.expansion = "units"
+        if args.hierarchy_candidate_k is None:
+            args.hierarchy_candidate_k = 20 if args.hierarchy_search == "joint" else 5
+        if min(args.hierarchy_depth, args.hierarchy_max_units, args.hierarchy_max_per_document,
+               args.hierarchy_max_tokens, args.hierarchy_candidate_k) < 1:
+            parser.error("Los parámetros --hierarchy-* deben ser positivos.")
+        try:
+            args.hierarchy_relations = ",".join(resolve_relations(args.hierarchy_relations.split(",")))
+        except ValueError as exc:
+            parser.error(str(exc))
+    elif args.expansion is None:
+        args.expansion = "neighbors"
 
 
 def _units_path(args: argparse.Namespace, config: dict[str, Any]) -> Path | None:
     value = args.units_path or config.get("units_path")
+    return Path(value).expanduser().resolve() if value else None
+
+
+def _catalog_path(args: argparse.Namespace, config: dict[str, Any]) -> Path | None:
+    value = args.catalog_path or config.get("catalog_path")
     return Path(value).expanduser().resolve() if value else None
 
 
@@ -146,17 +220,73 @@ def _chunk_id(point: Any) -> str | None:
     return value if isinstance(value, str) else None
 
 
+def _print_hierarchy(hierarchy: dict[str, Any]) -> None:
+    print("\n=== JERARQUÍA (normas superiores) ===")
+    print(f"Normas base: {', '.join(hierarchy.get('seed_documents') or []) or '-'}")
+    print(f"Relaciones: {', '.join(hierarchy.get('relations') or [])}; profundidad {hierarchy.get('max_depth')}")
+    targets = hierarchy.get("targets") or []
+    if not targets:
+        print("Sin normas superiores relacionadas.")
+    for target in targets:
+        via = ", ".join(f"{v['source_document_id']} {v['relation']}" for v in target["via"])
+        print(f"- destino {target['document_id']} (rango {target['rank']}, salto {target['depth']}) ← {via}")
+    print(f"Candidatos en normas superiores: {hierarchy.get('candidates')}")
+    units = hierarchy.get("units") or []
+    if not units:
+        print("No se agregaron unidades de normas superiores.")
+    for unit in units:
+        score = f"{unit['score']:.4f}" if isinstance(unit.get("score"), float) else unit.get("score")
+        print(f"+ {unit['unit_id']} (rango {unit['rank']}, score={score}, {unit['mode']}); "
+              f"chunks={unit['matched_chunk_ids']}")
+    skipped = hierarchy.get("skipped") or []
+    if skipped:
+        reasons: dict[str, int] = {}
+        for item in skipped:
+            reasons[item["reason"]] = reasons.get(item["reason"], 0) + 1
+        print("Descartes: " + ", ".join(f"{reason}={count}" for reason, count in reasons.items()))
+
+
+def _print_timings(timings: dict[str, float | None]) -> None:
+    """Tiempos agrupados en carga (una vez por proceso) y ejecución (cada consulta)."""
+    grouped = group_timings(timings)
+
+    def line(stage: str, seconds: Any, indent: str = "  ") -> None:
+        print(f"{indent}- {stage}: {seconds:.3f} s" if seconds is not None else f"{indent}- {stage}: no ejecutado")
+
+    def subtotal(label: str, seconds: float | None) -> None:
+        print(f"{label}: {seconds:.3f} s" if seconds is not None else f"{label}: -")
+
+    print("\nTiempos de ejecución:")
+    subtotal("Carga (una vez por proceso; se evita con todo en memoria)", grouped["load_total"])
+    for stage, seconds in grouped["load"].items():
+        line(stage, seconds)
+    subtotal("Ejecución (por consulta)", grouped["execution_total"])
+    for stage, seconds in grouped["execution"].items():
+        line(stage, seconds)
+        for nested, parent in NESTED_STAGES.items():
+            if parent == stage and nested in grouped["nested"]:
+                line(f"{nested} (incluido en {stage})", grouped["nested"][nested], indent="      ")
+    for stage, seconds in grouped["other"].items():
+        line(stage, seconds)
+    subtotal("Total", grouped["total"])
+
+
 def _print_result(
     *,
-    answer: Any,
+    answer: Any | None,
+    context_result: Any,
     candidates: list[Any],
     ranked_results: list[tuple[Any, float | None]],
     rerank_enabled: bool,
     timings: dict[str, float | None],
+    show_context: bool = False,
 ) -> None:
-    context_result = answer.context_result
-    print("\n=== RESPUESTA ===")
-    print(answer.answer)
+    if show_context:
+        print("\n=== CONTEXTO ===")
+        print(context_result.context)
+    if answer is not None:
+        print("\n=== RESPUESTA ===")
+        print(answer.answer)
 
     print("\n=== FUENTES DEL CONTEXTO ===")
     if not context_result.chunks:
@@ -167,26 +297,31 @@ def _print_result(
             f"- {chunk.source_file or chunk.document_id or 'origen desconocido'}"
             f"{pages}; chunk={chunk.chunk_id or 'sin ID'}; rol={chunk.role}"
         )
+    hierarchy = context_result.metadata.get("hierarchy")
+    if hierarchy is not None:
+        _print_hierarchy(hierarchy)
 
     print("\n=== RESUMEN DEL PIPELINE ===")
     print(f"Candidatos híbridos: {len(candidates)}")
     expansion = context_result.metadata.get("expansion", "neighbors")
+    print(f"Modo de recuperación: {context_result.metadata.get('retrieval_mode', 'hybrid')}; expansión: {expansion}")
     label = "Unidades (artículos)" if expansion == "units" else "Chunks"
     print(f"{label} enviados al contexto: {len(context_result.chunks)}")
     tokens = (context_result.metadata.get("metrics") or {}).get("token_count")
     if tokens is not None:
         print(f"Tokens estimados del contexto: {tokens}")
     print(f"Reranker: {'activado' if rerank_enabled else 'desactivado (orden RRF)'}")
-    print(f"Proveedor/modelo: {answer.provider}/{answer.model}")
-    print(
-        "Tokens reportados por el proveedor: "
-        f"entrada={answer.provider_metrics.input_tokens}, "
-        f"salida={answer.provider_metrics.output_tokens}"
-    )
-    print(f"Latencia de generación medida por la aplicación: {answer.application_latency_ms:.3f} ms")
-    print("\nTiempos de ejecución:")
-    for stage, seconds in timings.items():
-        print(f"- {stage}: {seconds:.3f} s" if seconds is not None else f"- {stage}: no ejecutado")
+    if answer is None:
+        print("Generación: omitida (--no-generation)")
+    else:
+        print(f"Proveedor/modelo: {answer.provider}/{answer.model}")
+        print(
+            "Tokens reportados por el proveedor: "
+            f"entrada={answer.provider_metrics.input_tokens}, "
+            f"salida={answer.provider_metrics.output_tokens}"
+        )
+        print(f"Latencia de generación medida por la aplicación: {answer.application_latency_ms:.3f} ms")
+    _print_timings(timings)
 
     if ranked_results:
         ranking_source = "reranker" if rerank_enabled else "RRF"
@@ -204,11 +339,20 @@ def _build_payload(
     ranked_results: list[tuple[Any, float | None]] | None,
     rerank_enabled: bool,
     timings: dict[str, float | None],
+    context_result: Any | None = None,
 ) -> dict[str, Any]:
-    """Resultado serializable; las partes no calculadas (por error) quedan en None."""
+    """Resultado serializable; las partes no calculadas (por error) quedan en None.
+
+    Sin generación (``--no-generation`` o error en la generación), el contexto
+    se guarda aparte en ``context_result``; con generación ya va dentro de
+    ``generation_result``.
+    """
     return {
         "query": query,
         "generation_result": answer.to_dict() if answer is not None else None,
+        "context_result": (
+            context_result.to_dict() if answer is None and context_result is not None else None
+        ),
         "retrieval_results": (
             [
                 {"chunk_id": _chunk_id(point), "rrf_score": getattr(point, "score", None)}
@@ -245,8 +389,10 @@ def _export_json(path: Path, **payload_kwargs: Any) -> None:
     )
 
 
-def _generation_config_snapshot(config: Any) -> dict[str, Any]:
+def _generation_config_snapshot(config: Any) -> dict[str, Any] | None:
     """Configuración de generación sin secretos: solo el nombre de la variable."""
+    if config is None:
+        return None
     headers = {
         key: value
         for key, value in config.extra_headers.items()
@@ -263,6 +409,7 @@ def _generation_config_snapshot(config: Any) -> dict[str, Any]:
         "api_key_env": config.api_key_env,
         "extra_headers": headers,
         "extra_body": config.extra_body,
+        "prompt_strategy": config.prompt_strategy,
     }
 
 
@@ -280,7 +427,23 @@ def _retrieval_config_snapshot(config: dict[str, Any], args: argparse.Namespace)
         "units_path": (
             str(_units_path(args, config)) if args.expansion == "units" else None
         ),
+        "retrieval_mode": args.retrieval_mode,
+        "catalog_path": (
+            str(_catalog_path(args, config)) if args.expansion == "units" and _catalog_path(args, config) else None
+        ),
+        "catalog_sha256": _catalog_sha(args, config),
     }
+
+
+def _catalog_sha(args: argparse.Namespace, config: dict[str, Any]) -> str | None:
+    """sha256 del catálogo usado (trazabilidad del modo jerárquico)."""
+    if args.expansion != "units":
+        return None
+    path = _catalog_path(args, config)
+    try:
+        return file_sha256(path) if path else None
+    except OSError:
+        return None
 
 
 def _args_snapshot(args: argparse.Namespace) -> dict[str, Any]:
@@ -318,6 +481,7 @@ def _log_run(
             ranked_results=state["ranked_results"],
             rerank_enabled=args.rerank,
             timings=state["timings"],
+            context_result=state.get("context_result"),
         ),
         "args": _args_snapshot(args),
         "generation_config": _generation_config_snapshot(generation_config),
@@ -352,6 +516,18 @@ def _run_pipeline(
         stage_start = time.perf_counter()
         reranker = load_reranker(args.reranker_model or config["reranker_model_path"])
         timings["reranker_load"] = time.perf_counter() - stage_start
+
+    # El catálogo da nombre y rango a las normas en la presentación por documentos
+    # (--expansion units) y es obligatorio en el modo jerárquico.
+    catalog = None
+    catalog_path = _catalog_path(args, config) if args.expansion == "units" else None
+    if args.retrieval_mode == "hierarchical" and catalog_path is None:
+        raise ValueError("--retrieval-mode hierarchical requiere --catalog-path o catalog_path en la configuración.")
+    if catalog_path is not None:
+        state["stage"] = "catalog_load"
+        stage_start = time.perf_counter()
+        catalog = load_catalog(catalog_path)
+        timings["catalog_load"] = time.perf_counter() - stage_start
 
     unit_index = None
     if args.expansion == "units":
@@ -406,14 +582,55 @@ def _run_pipeline(
         stage_start = time.perf_counter()
         if unit_index is not None:
             # Small-to-big: cada chunk recuperado se sube a su artículo.
+            fetch_chunk_texts = qdrant_chunk_fetcher(client, config["collection_name"])
             context_result = build_unit_context(
                 args.query,
                 ranked_results,
                 unit_index,
-                fetch_chunk_texts=qdrant_chunk_fetcher(client, config["collection_name"]),
+                fetch_chunk_texts=fetch_chunk_texts,
                 max_tokens=args.max_context_tokens or DEFAULT_UNITS_MAX_CONTEXT_TOKENS,
                 max_unit_tokens=args.max_unit_tokens,
             )
+            timings["context_builder"] = time.perf_counter() - stage_start
+            if args.retrieval_mode == "hierarchical":
+                # Arquitectura C: misma pregunta, búsqueda acotada a las normas superiores.
+                def search_superior(document_ids: list[str]) -> list[tuple[Any, float | None]]:
+                    groups = [document_ids] if args.hierarchy_search == "joint" else [[d] for d in document_ids]
+                    found = []
+                    for group in groups:
+                        found += hybrid_search(
+                            client, config, query_vector, args.query,
+                            max(args.prefetch_k, args.hierarchy_candidate_k), args.hierarchy_candidate_k,
+                            args.rrf_k, document_ids=group,
+                        )
+                    if reranker is None and args.hierarchy_search == "per-document":
+                        found.sort(key=lambda point: point.score or 0.0, reverse=True)
+                    if reranker is not None:
+                        return rerank(reranker, args.query, found, args.batch_size)
+                    return [(point, None) for point in found]
+
+                state["stage"] = "hierarchy"
+                stage_start = time.perf_counter()
+                context_result = expand_with_hierarchy(
+                    args.query,
+                    context_result,
+                    unit_index,
+                    catalog,
+                    search_superior,
+                    relations=tuple(args.hierarchy_relations.split(",")),
+                    max_depth=args.hierarchy_depth,
+                    max_units=args.hierarchy_max_units,
+                    max_per_document=args.hierarchy_max_per_document,
+                    min_score=args.hierarchy_min_score,
+                    max_tokens=args.hierarchy_max_tokens,
+                    max_unit_tokens=args.max_unit_tokens,
+                    fetch_chunk_texts=fetch_chunk_texts,
+                )
+                # Etapa propia: búsqueda filtrada + rerank + selección de normas superiores.
+                timings["hierarchy"] = time.perf_counter() - stage_start
+                timings["hierarchy_search"] = (
+                    context_result.metadata.get("timings_seconds") or {}
+                ).get("hierarchy_search")
         else:
             builder_config = {
                 **config,
@@ -427,9 +644,20 @@ def _run_pipeline(
                 },
             }
             context_result = build_context(args.query, ranked_results, client, builder_config)
-        timings["context_builder"] = time.perf_counter() - stage_start
+            timings["context_builder"] = time.perf_counter() - stage_start
+        if unit_index is not None:
+            # Mismo formato que rag-istae-api: [unit_id] agrupados por documento.
+            stage_start = time.perf_counter()
+            context_result = render_documents(context_result, catalog)
+            timings["presentation"] = time.perf_counter() - stage_start
+        state["context_result"] = context_result
     finally:
         client.close()
+
+    if generation_config is None:  # --no-generation
+        timings["generation"] = None
+        timings["total"] = time.perf_counter() - process_start
+        return
 
     state["stage"] = "generation"
     stage_start = time.perf_counter()
@@ -450,9 +678,12 @@ def main(argv: list[str] | None = None) -> int:
     process_start = time.perf_counter()
     stage_start = time.perf_counter()
     config = load_config(args.config)
-    generation_config = load_generation_config(args.generation_config)
+    generation_config = None if args.no_generation else load_generation_config(args.generation_config)
     configuration_seconds = time.perf_counter() - stage_start
-    if not os.environ.get(generation_config.api_key_env):
+    if (generation_config is not None and getattr(generation_config, "prompt_strategy", "single") == "modular"
+            and args.expansion != "units"):
+        parser.error("prompt_strategy=modular requiere --expansion units.")
+    if generation_config is not None and not os.environ.get(generation_config.api_key_env):
         parser.error(
             f"Define la variable de entorno {generation_config.api_key_env} "
             "antes de ejecutar una consulta."
@@ -463,6 +694,7 @@ def main(argv: list[str] | None = None) -> int:
         "candidates": None,
         "ranked_results": None,
         "answer": None,
+        "context_result": None,
         "timings": {"configuration_load": configuration_seconds},
     }
     log_kwargs = dict(
@@ -486,12 +718,13 @@ def main(argv: list[str] | None = None) -> int:
 
     payload_kwargs = dict(
         answer=state["answer"],
+        context_result=state["context_result"],
         candidates=state["candidates"],
         ranked_results=state["ranked_results"],
         rerank_enabled=args.rerank,
         timings=state["timings"],
     )
-    _print_result(**payload_kwargs)
+    _print_result(**payload_kwargs, show_context=args.show_context)
     if args.json_output:
         _export_json(args.json_output, query=args.query, **payload_kwargs)
         print(f"\nResultado JSON exportado: {args.json_output}")
