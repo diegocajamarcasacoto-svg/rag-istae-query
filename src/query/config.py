@@ -9,7 +9,7 @@ REQUIRED = ("e5_model_path", "reranker_model_path", "qdrant_path", "collection_n
 
 
 def load_config(path: Path) -> dict[str, Any]:
-    config = json.loads(path.read_text(encoding="utf-8"))
+    config = json.loads(path.read_text(encoding="utf-8-sig"))  # acepta UTF-8 con o sin BOM
     missing = [key for key in REQUIRED if not config.get(key)]
     if missing:
         raise KeyError(f"Faltan claves de configuracion: {', '.join(missing)}")

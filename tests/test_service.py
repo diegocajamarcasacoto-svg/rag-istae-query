@@ -152,20 +152,39 @@ class ServiceTests(unittest.TestCase):
 
     def test_engine_error_returns_500_with_run_id(self) -> None:
         client = self._client(FakeEngine(fail=True))
-        response = client.post("/retrieve", json={"question": "q"}, headers=HEADERS)
+        with self.assertLogs("query.service", "ERROR"):  # la traza esperada no se imprime en la consola
+            response = client.post("/retrieve", json={"question": "q"}, headers=HEADERS)
         self.assertEqual(response.status_code, 500)
         self.assertIn("run_id", response.json()["detail"])
         self.assertNotIn("Qdrant no responde", response.text)
 
     def test_engine_load_failure_returns_503(self) -> None:
-        client = self._client(FileNotFoundError("units.jsonl"))
+        with self.assertLogs("query.service", "ERROR"):  # la traza esperada no se imprime en la consola
+            client = self._client(FileNotFoundError("units.jsonl"))
         self.assertEqual(client.get("/health").status_code, 503)
         self.assertEqual(client.post("/retrieve", json={"question": "q"}, headers=HEADERS).status_code, 503)
 
 
 class SettingsTests(unittest.TestCase):
-    ENV = {"RAG_CONFIG": "", "RAG_QDRANT_PATH": "q", "RAG_E5_MODEL_PATH": "e5", "RAG_RERANKER_MODEL_PATH": "bge",
-           "RAG_UNITS_PATH": "units.jsonl", "RAG_CATALOG_PATH": "catalogo.json", "RAG_COLLECTION": "c"}
+    OVERRIDES = {"RAG_QDRANT_PATH": "q", "RAG_E5_MODEL_PATH": "e5", "RAG_RERANKER_MODEL_PATH": "bge",
+                 "RAG_UNITS_PATH": "units.jsonl", "RAG_CATALOG_PATH": "catalogo.json", "RAG_COLLECTION": "c"}
+
+    def setUp(self) -> None:
+        # Configuración base vacía: las pruebas no dependen del config/local.json del equipo.
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.tmp = Path(tmp.name)
+        empty = self.tmp / "vacio.json"
+        empty.write_text("{}", encoding="utf-8")
+        self.ENV = {"RAG_CONFIG": str(empty), **self.OVERRIDES}
+
+    def test_config_with_utf8_bom_is_accepted(self) -> None:
+        # PowerShell 5.1 (Set-Content -Encoding utf8) guarda el JSON con BOM.
+        config = self.tmp / "local.json"
+        config.write_text('{"collection_name": "desde-json"}', encoding="utf-8-sig")
+        settings = load_settings({**self.OVERRIDES, "RAG_COLLECTION": "", "RAG_CONFIG": str(config),
+                                  "RAG_API_KEY": KEY})
+        self.assertEqual(settings.retrieval_config["collection_name"], "desde-json")
 
     def test_requires_api_key_unless_disabled(self) -> None:
         with self.assertRaises(ValueError):

@@ -77,7 +77,7 @@ Cualquier otro campo, como `top_k`, `candidate_k` o `history`, se rechaza con 42
 | `run_id` | Identificador de la llamada en el registro (`logs/service/runs/<run_id>.json`). |
 | `baseline` | Línea base aplicada (`"LB-1"`). |
 | `mode` | `{rerank, hierarchy, architecture: "B" \| "C"}` |
-| `units[]` | Artículos en el orden en que se envían: primero los de la búsqueda base por relevancia, después los de la jerarquía. Campos: `unit_id` (los mismos IDs de `GET /units/{id}` de la API), `document_id`, `document_name`, `rank` (1 = mayor jerarquía), `label`, `title`, `text` (texto del artículo; si es parcial, con `[…]` en los tramos omitidos), `partial`, `score` (del reranker; sin rerank, el de la fusión RRF), `origin` (`base` \| `hierarchy`) y `matched_chunk_ids`. |
+| `units[]` | Artículos en el orden en que se envían: primero los de la búsqueda base por relevancia, después los de la jerarquía. Campos: `unit_id` (mismo esquema de IDs que la API: `INT08-art12`), `document_id`, `document_name`, `rank` (1 = mayor jerarquía), `label`, `title`, `text` (texto del artículo; si es parcial, con `[…]` en los tramos omitidos), `partial`, `score` (del reranker; sin rerank, el de la fusión RRF), `origin` (`base` \| `hierarchy`) y `matched_chunk_ids`. |
 | `context` | Bloque de documentos listo para `<documentos>…</documentos>`, en el formato de la API: `=== [DOC] Nombre ===` y `[unit_id] texto`. En C, como AJ: escala jerárquica, normas por rango con emisor, «incluida por jerarquía» y relaciones entre las normas presentes. |
 | `tokens_estimated` | Tokens estimados de `context` (bytes UTF-8 / 4). |
 | `warnings` | Avisos del pipeline, por ejemplo «sin normas superiores relacionadas». |
@@ -150,19 +150,11 @@ La primera pregunta del usuario define el contexto. Las preguntas de seguimiento
 
 Limitaciones y evaluación prevista: ver la sección «Conversación» del README de `rag-istae-query`.
 
-## Integración prevista en `rag-istae-api` (propuesta; ese repositorio no se modifica desde aquí)
+## Integración en `rag-istae-api` y `rag-istae-web`
 
-```python
-# Esquema de una clase B/C en rag-istae-api (ChatArchitecture.stream)
-anchor = next((m.content for m in history if m.role == "user"), question)
-turn = sum(1 for m in history if m.role == "user") + 1
-data = httpx.post(f"{RETRIEVAL_URL}/retrieve",
-                  json={"question": anchor, "hierarchy": variant == "C", "turn": turn},
-                  headers={"X-API-Key": RETRIEVAL_API_KEY}, timeout=60).json()
-system = base + rag (+ jerarquia en C) + f"\n\n<documentos>\n{data['context']}\n</documentos>"
-# El LLM recibe system, el historial reciente (MAX_HISTORY_MESSAGES) y la pregunta actual con el recordatorio.
-# parse_answer y GET /units/{id} funcionan sin cambios: los unit_id son los mismos.
-```
+La integración completa se describe en [`guia_integracion_api.md`](guia_integracion_api.md). B y C son independientes de A/AJ: la respuesta de `/retrieve` es la única fuente de artículos para la API:
+- `context` va al LLM dentro de `<documentos>…</documentos>`;
+- `units[].text` es contra lo que se verifican las citas (`parse_answer`), y una cita a un artículo que no se envió queda como desconocida;
+- `units[]` (`label`, `title`, `text`, `partial`, `origin`) se agrega a las fuentes del evento `answer`, para que la web muestre el artículo sin `GET /units/{id}`.
 
-- Variables propuestas para la API: `RETRIEVAL_URL` y `RETRIEVAL_API_KEY`.
-- Para mantener la comparación pareja con A/AJ, se propone usar en ellas la misma regla de conversación (un tema por conversación) y mostrar un aviso en `rag-istae-web`.
+La clase propuesta para la API está en [`integracion_api/rag.py`](integracion_api/rag.py).

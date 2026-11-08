@@ -59,7 +59,7 @@ def retrieval_config_from_env(env: Mapping[str, str]) -> dict[str, Any]:
     config_path = Path(env["RAG_CONFIG"]) if env.get("RAG_CONFIG") else DEFAULT_CONFIG
     config: dict[str, Any] = {}
     if config_path.is_file():
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config = json.loads(config_path.read_text(encoding="utf-8-sig"))  # con o sin BOM
     elif env.get("RAG_CONFIG"):
         raise FileNotFoundError(f"RAG_CONFIG no existe: {config_path}")
     for variable, key in ENV_OVERRIDES.items():

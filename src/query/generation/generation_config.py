@@ -58,7 +58,7 @@ def load_generation_config(path: Path) -> GenerationConfig:
     directorio de trabajo del proceso.
     """
     config_path = Path(path).expanduser().resolve()
-    data: Any = json.loads(config_path.read_text(encoding="utf-8"))
+    data: Any = json.loads(config_path.read_text(encoding="utf-8-sig"))  # con o sin BOM
     if not isinstance(data, dict):
         raise TypeError("La configuración de generación debe ser un objeto JSON.")
 

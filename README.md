@@ -284,7 +284,7 @@ Casos pendientes de validación jurídica:
 
 ## Servicio de recuperación (`POST /retrieve`)
 
-Servicio HTTP (FastAPI) que carga E5, el reranker, `units.jsonl`, el catálogo y Qdrant **una sola vez** y atiende consultas de B y C. No genera respuesta: `rag-istae-api` arma el prompt y llama al LLM con su propio modelo. Contrato completo, ejemplos y variables de entorno: [`docs/contrato_retrieve.md`](docs/contrato_retrieve.md).
+Servicio HTTP (FastAPI) que carga E5, el reranker, `units.jsonl`, el catálogo y Qdrant **una sola vez** y atiende consultas de B y C. No genera respuesta: `rag-istae-api` arma el prompt y llama al LLM con su propio modelo. Contrato completo, ejemplos y variables de entorno: [`docs/contrato_retrieve.md`](docs/contrato_retrieve.md). Para instalarlo en otro equipo con el paquete de datos (sin reindexar): [`docs/guia_ambiente_local.md`](docs/guia_ambiente_local.md). Integración de B/C en `rag-istae-api` y `rag-istae-web`, independiente de A/AJ y con los artículos tomados de la respuesta de `/retrieve`: [`docs/guia_integracion_api.md`](docs/guia_integracion_api.md).
 
 - **Request:** `question` (en una conversación, la primera pregunta del usuario), `rerank` (por defecto `true`), `hierarchy` (`false` = B, `true` = C), `document_ids` opcional; `turn`, `question_id` y `tag` solo para el registro; `debug`. Los parámetros de la línea base no se aceptan en el request (422): los fija `query.baseline.CURRENT_BASELINE` (LB-1).
 - **Response:** artículos (`unit_id`, norma, rango, texto, `score`, `origin` base o jerarquía), `context` ya renderizado en el formato de la API, tokens estimados, `cached`, `index_version` y tiempos.
