@@ -1,9 +1,10 @@
 {
   "provider": "gemini",
   "model": "gemini-2.5-flash",
-  "system_prompt_path": "prompts/system_prompt_es.txt",
+  "system_prompt_path": "prompts/modular",
   "temperature": 0.2,
   "max_output_tokens": 2048,
   "timeout_seconds": 60,
-  "api_key_env": "GEMINI_API_KEY"
+  "api_key_env": "GEMINI_API_KEY",
+  "prompt_strategy": "modular"
 }

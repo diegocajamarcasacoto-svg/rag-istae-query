@@ -79,9 +79,9 @@ def _parser() -> argparse.ArgumentParser:
         "--expansion",
         choices=("neighbors", "units"),
         help=(
-            "neighbors: Context Builder (semillas + vecinos heurísticos). "
-            "units: cada chunk recuperado se sube a su artículo según units.jsonl (small-to-big). "
-            "Predeterminado: neighbors en --retrieval-mode hybrid; units en hierarchical."
+            "units (predeterminado, línea base B/C): cada chunk recuperado se sube a su artículo "
+            "según units.jsonl (small-to-big). neighbors: Context Builder anterior (semillas + "
+            "vecinos heurísticos), solo para comparar la recuperación; requiere --no-generation."
         ),
     )
     parser.add_argument(
@@ -205,7 +205,12 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
         except ValueError as exc:
             parser.error(str(exc))
     elif args.expansion is None:
-        args.expansion = "neighbors"
+        args.expansion = "units"
+    if args.expansion == "neighbors" and not args.no_generation:
+        parser.error(
+            "--expansion neighbors solo admite --no-generation: la generación usa el prompt modular "
+            "de rag-istae-api, que requiere el contexto por artículos (--expansion units)."
+        )
 
 
 def _baseline_from_args(args: argparse.Namespace) -> Baseline:
@@ -659,9 +664,6 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config(args.config)
     generation_config = None if args.no_generation else load_generation_config(args.generation_config)
     configuration_seconds = time.perf_counter() - stage_start
-    if (generation_config is not None and getattr(generation_config, "prompt_strategy", "single") == "modular"
-            and args.expansion != "units"):
-        parser.error("prompt_strategy=modular requiere --expansion units.")
     if generation_config is not None and not os.environ.get(generation_config.api_key_env):
         parser.error(
             f"Define la variable de entorno {generation_config.api_key_env} "

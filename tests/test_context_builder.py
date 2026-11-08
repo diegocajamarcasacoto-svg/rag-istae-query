@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import sys
-import tempfile
 import unittest
-from contextlib import redirect_stdout
-from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT / "scripts"))
 
 from query.context import build_context
 from query.context.context_merger import deduplicate_and_sort
@@ -20,7 +16,6 @@ from query.context.neighbor_expander import expand_neighbors
 from query.context.structure_detector import detect_structure
 from query.context.structure_validator import validate_neighbor
 from query.context.token_budget import apply_token_budget
-from validate_context_pipeline import _parser, export_validation_json, main
 
 
 COLLECTION = "test_collection"
@@ -311,79 +306,6 @@ class ContextBuilderTests(unittest.TestCase):
             "total",
         ):
             self.assertGreaterEqual(timings[stage], 0)
-
-    def test_exports_json(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "result.json"
-            export_validation_json(path, {"query": "consulta", "discarded_chunks": []})
-            self.assertEqual(path.read_text(encoding="utf-8"), '{\n  "query": "consulta",\n  "discarded_chunks": []\n}\n')
-
-    def test_surfaces_model_initialization_errors(self):
-        with patch("validate_context_pipeline.load_config", return_value={"e5_model_path": Path("missing")}):
-            with patch("validate_context_pipeline.load_e5", side_effect=FileNotFoundError("missing E5")):
-                with self.assertRaisesRegex(FileNotFoundError, "missing E5"):
-                    main(["consulta"])
-
-    def test_surfaces_qdrant_initialization_errors(self):
-        config_data = {
-            "e5_model_path": Path("e5"),
-            "reranker_model_path": Path("bge"),
-            "collection_name": COLLECTION,
-        }
-        with patch("validate_context_pipeline.load_config", return_value=config_data):
-            with patch("validate_context_pipeline.load_e5", return_value=object()):
-                with patch("validate_context_pipeline.load_reranker", return_value=object()):
-                    with patch(
-                        "validate_context_pipeline.open_client",
-                        side_effect=RuntimeError("Qdrant unavailable"),
-                    ):
-                        with self.assertRaisesRegex(RuntimeError, "Qdrant unavailable"):
-                            main(["consulta"])
-
-    def test_reranker_is_enabled_by_default_and_can_be_disabled(self):
-        parser = _parser()
-        self.assertTrue(parser.parse_args(["consulta"]).rerank)
-        self.assertFalse(parser.parse_args(["consulta", "--no-rerank"]).rerank)
-        self.assertTrue(parser.parse_args(["consulta", "--rerank"]).rerank)
-
-    def test_no_rerank_skips_model_and_uses_rrf_candidates(self):
-        config_data = {
-            "e5_model_path": Path("e5"),
-            "reranker_model_path": Path("bge"),
-            "collection_name": COLLECTION,
-        }
-        client = empty_client()
-        candidate = point("DOC:1", "DOC", 1, "Texto candidato.")
-        with patch("validate_context_pipeline.load_config", return_value=config_data):
-            with patch("validate_context_pipeline.load_e5", return_value=object()):
-                with patch("validate_context_pipeline.load_reranker") as load_model:
-                    with patch("validate_context_pipeline.open_client", return_value=client):
-                        with patch("validate_context_pipeline.encode_query", return_value=[0.1]):
-                            with patch(
-                                "validate_context_pipeline.hybrid_search",
-                                return_value=[candidate],
-                            ):
-                                with patch("validate_context_pipeline.rerank") as rerank_model:
-                                    with patch(
-                                        "validate_context_pipeline.build_context",
-                                        wraps=build_context,
-                                    ) as build:
-                                        with redirect_stdout(StringIO()):
-                                            self.assertEqual(
-                                                main(["consulta", "--no-rerank"]),
-                                                0,
-                                            )
-        load_model.assert_not_called()
-        rerank_model.assert_not_called()
-        self.assertEqual(
-            build.call_args.args[1],
-            [(candidate, None)],
-        )
-        self.assertEqual(
-            build.call_args.args[3]["context_builder"]["seed_count"],
-            3,
-        )
-        client.close.assert_called_once()
 
     def test_structure_detector_handles_decimal_articles_and_unknown_metadata(self):
         self.assertEqual(

@@ -194,17 +194,21 @@ class QueryRagLoggingTests(unittest.TestCase):
                 context_result=context,
             )
 
-        local_config = {"collection_name": "istae_chunks_e5_base", "reranker_model_path": "bge"}
+        def _pipeline(question, *, state, **kwargs):
+            # Simula query.pipeline.run_units_pipeline (expansión units, predeterminada).
+            state["candidates"] = [_point("INT08:00055", 0.5), _point("X:1", 0.4)]
+            state["context_result"] = context_result
+
+        local_config = {"collection_name": "istae_chunks_e5_base", "reranker_model_path": "bge",
+                        "units_path": "units.jsonl"}
         patches = [
             mock.patch.object(query_rag, "load_config", return_value=local_config),
             mock.patch.object(query_rag, "load_generation_config", return_value=_generation_config()),
             mock.patch.object(query_rag, "load_e5", return_value=object()),
+            mock.patch.object(query_rag, "load_units", return_value=object()),
             mock.patch.object(query_rag, "open_client", return_value=mock.MagicMock()),
-            mock.patch.object(query_rag, "encode_query", return_value=[0.0]),
-            mock.patch.object(
-                query_rag, "hybrid_search", return_value=[_point("INT08:00055", 0.5), _point("X:1", 0.4)]
-            ),
-            mock.patch.object(query_rag, "build_context", return_value=context_result),
+            mock.patch.object(query_rag, "run_units_pipeline", side_effect=_pipeline),
+            mock.patch.object(query_rag, "build_context", side_effect=AssertionError("no debe usarse")),
             mock.patch.object(query_rag, "generate_answer", side_effect=_generate),
             mock.patch.dict(os.environ, {"OPENROUTER_API_KEY": SECRET}),
         ]

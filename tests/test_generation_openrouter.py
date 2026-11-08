@@ -24,10 +24,13 @@ MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 
 def _write_config(directory: Path, data: dict) -> Path:
-    (directory / "system.txt").write_text("Reglas", encoding="utf-8")
+    prompts = directory / "prompts"
+    prompts.mkdir(exist_ok=True)
+    for name in ("base_es.txt", "rag_es.txt", "jerarquia_es.txt", "recordatorio_es.txt"):
+        (prompts / name).write_text(f"Reglas {name}", encoding="utf-8")
     path = directory / "generation.json"
     path.write_text(
-        json.dumps({"system_prompt_path": "system.txt", **data}), encoding="utf-8"
+        json.dumps({"system_prompt_path": "prompts", **data}), encoding="utf-8"
     )
     return path
 
@@ -151,7 +154,11 @@ class OpenRouterProviderTests(unittest.TestCase):
             with mock.patch.object(
                 OpenAICompatibleProvider, "_create_client", return_value=client
             ):
-                result = generate_answer(ContextResult(query="q", context="c", chunks=[], metadata={}), config)
+                result = generate_answer(
+                    ContextResult(query="q", context="c", chunks=[],
+                                  metadata={"presentation": "documents", "expansion": "units"}),
+                    config,
+                )
 
         self.assertEqual(result.provider, "openrouter")
         self.assertEqual(result.model, MODEL)

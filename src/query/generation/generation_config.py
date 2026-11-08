@@ -17,20 +17,19 @@ DEFAULT_API_KEY_ENV = {
 DEFAULT_BASE_URL = {
     "openrouter": "https://openrouter.ai/api/v1",
 }
-# single: un System Prompt único (system_prompt_path es un archivo) y la pregunta
-#   con el contexto como JSON.
 # modular: mismo armado que rag-istae-api (system_prompt_path es una carpeta con
-#   base_es.txt, rag_es.txt, jerarquia_es.txt y recordatorio_es.txt).
-PROMPT_STRATEGIES = ("single", "modular")
+#   base_es.txt, rag_es.txt, jerarquia_es.txt y recordatorio_es.txt). Es la única
+#   estrategia: la anterior "single" (un System Prompt y el contexto como JSON) se
+#   retiró para que B/C se evalúen siempre con el prompt de la API.
+PROMPT_STRATEGIES = ("modular",)
 
 
 @dataclass(frozen=True)
 class GenerationConfig:
     """Opciones para una solicitud de generación.
 
-    ``system_prompt_path`` se resuelve respecto del archivo JSON que declara
-    la ruta: un archivo con ``prompt_strategy="single"`` o una carpeta de
-    prompts con ``"modular"``. La credencial no se almacena aquí: ``api_key_env`` nombra la
+    ``system_prompt_path`` es la carpeta de prompts modulares y se resuelve
+    respecto del archivo JSON que declara la ruta. La credencial no se almacena aquí: ``api_key_env`` nombra la
     variable de entorno que consulta el adaptador del proveedor.
 
     ``base_url``, ``extra_headers`` y ``extra_body`` solo los usan los
@@ -48,7 +47,7 @@ class GenerationConfig:
     base_url: str | None = None
     extra_headers: dict[str, str] = field(default_factory=dict)
     extra_body: dict[str, Any] = field(default_factory=dict)
-    prompt_strategy: str = "single"
+    prompt_strategy: str = "modular"
 
 
 def load_generation_config(path: Path) -> GenerationConfig:
@@ -131,13 +130,20 @@ def load_generation_config(path: Path) -> GenerationConfig:
     if not isinstance(extra_body, dict):
         raise TypeError("extra_body debe ser un objeto JSON.")
 
-    prompt_strategy = data.get("prompt_strategy", "single")
+    prompt_strategy = data.get("prompt_strategy", "modular")
     if prompt_strategy not in PROMPT_STRATEGIES:
-        raise ValueError(f"prompt_strategy debe ser uno de: {', '.join(PROMPT_STRATEGIES)}.")
+        raise ValueError(
+            f"prompt_strategy debe ser uno de: {', '.join(PROMPT_STRATEGIES)}. La estrategia "
+            "'single' se retiró: use system_prompt_path = \"prompts/modular\"."
+        )
 
     prompt_path = Path(prompt_value).expanduser()
     if not prompt_path.is_absolute():
         prompt_path = config_path.parent / prompt_path
+    if prompt_path.is_file():
+        raise ValueError(
+            f"system_prompt_path debe ser la carpeta de prompts modulares, no un archivo: {prompt_path}"
+        )
 
     return GenerationConfig(
         provider=provider_name,

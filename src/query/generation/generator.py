@@ -7,7 +7,7 @@ import time
 from query.context.models import ContextResult
 from query.generation.generation_config import GenerationConfig
 from query.generation.models import GenerationResult, ProviderMetrics
-from query.generation.prompt_builder import build_modular_prompt, build_prompt, load_system_prompt
+from query.generation.prompt_builder import build_modular_prompt
 from query.generation.providers import create_provider
 from query.generation.providers.base import GenerationProvider
 
@@ -32,10 +32,7 @@ def generate_answer(
 
     selected_provider = provider if provider is not None else create_provider(config.provider)
 
-    if config.prompt_strategy == "modular":
-        prompt = build_modular_prompt(context_result, config.system_prompt_path)
-    else:
-        prompt = build_prompt(context_result, load_system_prompt(config.system_prompt_path))
+    prompt = build_modular_prompt(context_result, config.system_prompt_path)
     started_at = time.perf_counter()
     response = selected_provider.generate(prompt, config=config)
     application_latency_ms = (time.perf_counter() - started_at) * 1000

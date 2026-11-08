@@ -316,6 +316,8 @@ La coincidencia de términos no sustituye la evaluación semántica: un fragment
 
 Se recomienda conservar la matriz original del Gold Standard y ampliarla con campos de evaluación.
 
+**Criterio de relevancia (vigente desde la Prueba 5):** el Gold Standard anota la norma y el artículo esperados, no `chunk_id`. Un fragmento recuperado es relevante si pertenece a una unidad esperada de `units.jsonl` (artículo, disposición o sección). Es el criterio que aplica `scripts/eval_candidate_depth.py` y el que deben usar también las Pruebas 1–4. Las fuentes que no son artículos (p. ej. indicadores del modelo CACES) se asignan a mano a su sección y se documentan.
+
 ### 6.1. Datos de referencia
 
 | Columna | Descripción |
@@ -323,8 +325,8 @@ Se recomienda conservar la matriz original del Gold Standard y ampliarla con cam
 | `id_pregunta` | Identificador único |
 | `pregunta` | Pregunta original |
 | `documento_esperado` | Documento que contiene la respuesta |
-| `chunk_id_esperado` | Fragmento o fragmentos relevantes |
-| `articulo_seccion` | Artículo o sección de referencia |
+| `articulo_seccion` | Artículo o sección de referencia (columnas «Fuente esperada» y «Artículo/sección» del Gold Standard) |
+| `unit_id_esperado` | Unidad o unidades de `units.jsonl` que corresponden a ese artículo (p. ej. `INT08-art12`) |
 | `pagina_esperada` | Página de referencia |
 | `terminos_esperados_corpus` | Términos identificados en el corpus |
 
@@ -442,7 +444,7 @@ python .\scripts\search_hybrid.py "pregunta del Gold Standard" --top-k 50 --pref
 
 `Select-String` deja solo las líneas `#posición | RRF=… | chunk_id=…`, porque el script también imprime el texto de cada resultado.
 
-Registrar la **posición del primer fragmento esperado** (`chunk_id_esperado`) en la lista de 50:
+Registrar la **posición del primer fragmento esperado** (un fragmento de una unidad esperada) en la lista de 50:
 - **posición 1–20:** ya entraba con la línea base;
 - **posición 21–50:** la línea base lo pierde y 50 lo rescata;
 - **ausente:** ni 50 alcanza; es un problema de la recuperación inicial, no de la profundidad.
@@ -472,7 +474,7 @@ Un grupo mayor de candidatos también puede **empeorar** el resultado: el rerank
 python .\scripts\eval_candidate_depth.py --questions Q02,Q13,Q26
 ```
 
-Sin `--questions`, recorre las 30 preguntas. Como el Gold Standard no tiene `chunk_id_esperado`, el script considera relevante un fragmento si pertenece al artículo esperado según `units.jsonl`.
+Sin `--questions`, recorre las 30 preguntas, con el criterio de relevancia por artículo de la sección 6.
 
 **Resultado (2026-11-07, 10 preguntas): se ratifica 20.**
 - Ninguna pregunta mejora con 50 y cinco empeoran en nDCG@5.

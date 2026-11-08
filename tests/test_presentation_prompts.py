@@ -142,12 +142,19 @@ class PromptStrategyConfigTests(unittest.TestCase):
             self.assertEqual(config.prompt_strategy, "modular")
             self.assertEqual(config.system_prompt_path, (Path(directory) / "prompts" / "modular").resolve())
 
-    def test_default_and_invalid_strategy(self) -> None:
+    def test_default_and_retired_strategies(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            self.assertEqual(load_generation_config(self._write(directory, system_prompt_path="s.txt")).prompt_strategy,
-                             "single")
-            with self.assertRaises(ValueError):
-                load_generation_config(self._write(directory, system_prompt_path="s.txt", prompt_strategy="otro"))
+            self.assertEqual(
+                load_generation_config(self._write(directory, system_prompt_path="prompts/modular")).prompt_strategy,
+                "modular",
+            )
+            # La estrategia "single" se retiró, y un archivo en lugar de la carpeta es un error.
+            with self.assertRaisesRegex(ValueError, "single"):
+                load_generation_config(self._write(directory, system_prompt_path="prompts/modular",
+                                                   prompt_strategy="single"))
+            (Path(directory) / "s.txt").write_text("Reglas", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "carpeta"):
+                load_generation_config(self._write(directory, system_prompt_path="s.txt"))
 
 
 if __name__ == "__main__":
