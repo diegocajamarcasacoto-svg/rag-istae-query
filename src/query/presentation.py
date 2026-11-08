@@ -30,7 +30,7 @@ PRESENTATION = "documents"
 INCLUDED_BY_HIERARCHY = "incluida por jerarquía"
 
 
-def _unit_body(chunk: ContextChunk) -> str:
+def unit_body(chunk: ContextChunk) -> str:
     """Texto de la unidad sin la línea de encabezado que agrega ``build_unit_context``."""
     header, _, body = chunk.text.partition("\n")
     if chunk.chunk_id and header.startswith(f"[{chunk.chunk_id}]"):
@@ -99,7 +99,7 @@ def render_documents(result: ContextResult, catalog: Catalog | None) -> ContextR
             header += " ==="
         else:
             header = f"=== [{doc}] {name} ==="
-        units = "\n\n".join(f"[{chunk.chunk_id}] {_unit_body(chunk)}" for chunk in groups[doc])
+        units = "\n\n".join(f"[{chunk.chunk_id}] {unit_body(chunk)}" for chunk in groups[doc])
         blocks.append(f"{header}\n{units}")
     if hierarchical:
         relations = _relations_block(catalog, order)

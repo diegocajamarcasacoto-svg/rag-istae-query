@@ -18,6 +18,7 @@ from query.run_log import INDEX_COLUMNS, write_run
 from query.units import PARTIAL_SEPARATOR, Unit, UnitIndex, build_unit_context, estimate_tokens, load_units
 
 import query_rag
+from query import pipeline
 
 
 def _point(chunk_id: str, score: float = 0.5, **payload) -> SimpleNamespace:
@@ -182,8 +183,9 @@ class QueryRagUnitsTests(unittest.TestCase):
                 mock.patch.object(query_rag, "load_generation_config", return_value=generation_config),
                 mock.patch.object(query_rag, "load_e5", return_value=object()),
                 mock.patch.object(query_rag, "open_client", return_value=mock.MagicMock()),
-                mock.patch.object(query_rag, "encode_query", return_value=[0.0]),
-                mock.patch.object(query_rag, "hybrid_search",
+                # La rama units corre en query.pipeline (compartido con el servicio /retrieve).
+                mock.patch.object(pipeline, "encode_query", return_value=[0.0]),
+                mock.patch.object(pipeline, "hybrid_search",
                                   return_value=[_point("INT08:00040", 0.5), _point("INT08:00039", 0.4)]),
                 mock.patch.object(query_rag, "build_context", side_effect=AssertionError("no debe usarse")),
                 mock.patch.object(query_rag, "generate_answer", side_effect=_generate),

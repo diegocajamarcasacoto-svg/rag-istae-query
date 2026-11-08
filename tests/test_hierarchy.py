@@ -25,6 +25,7 @@ from query.hierarchy import (
 from query.units import Unit, UnitIndex, build_unit_context
 
 import query_rag
+from query import pipeline
 
 CATALOG = {
     "source": "matriz.xlsx",
@@ -234,8 +235,9 @@ class QueryRagHierarchicalTests(unittest.TestCase):
                 mock.patch.object(query_rag, "generate_answer", side_effect=AssertionError("sin generación")),
                 mock.patch.object(query_rag, "load_e5", return_value=object()),
                 mock.patch.object(query_rag, "open_client", return_value=mock.MagicMock()),
-                mock.patch.object(query_rag, "encode_query", return_value=[0.0]),
-                mock.patch.object(query_rag, "hybrid_search", side_effect=_search),
+                # La rama units corre en query.pipeline (compartido con el servicio /retrieve).
+                mock.patch.object(pipeline, "encode_query", return_value=[0.0]),
+                mock.patch.object(pipeline, "hybrid_search", side_effect=_search),
                 mock.patch.dict(os.environ, {}, clear=True),
             ]
             for patch in patches:

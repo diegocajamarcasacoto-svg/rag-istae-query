@@ -12,18 +12,21 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from dataclasses import replace
+
+from query.baseline import LB1, Baseline
 from query.config import load_config
 from query.context import build_context
 from query.generation import generate_answer, load_generation_config
-from query.hierarchy import expand_with_hierarchy, load_catalog, resolve_relations
+from query.hierarchy import load_catalog, resolve_relations
 from query.hierarchy.catalog import file_sha256
-from query.presentation import render_documents
+from query.pipeline import run_units_pipeline
 from query.reranking import load_reranker, rerank
 from query.retrieval import encode_query, hybrid_search, load_e5, open_client
 from query.run_log import NESTED_STAGES, group_timings, new_run_id, write_run
-from query.units import build_unit_context, load_units, qdrant_chunk_fetcher
+from query.units import load_units
 
-DEFAULT_UNITS_MAX_CONTEXT_TOKENS = 4000
+DEFAULT_UNITS_MAX_CONTEXT_TOKENS = LB1.max_context_tokens
 DEFAULT_HIERARCHY_RELATIONS = "desarrolla,compatible"
 
 
@@ -48,11 +51,12 @@ def _parser() -> argparse.ArgumentParser:
         default=ROOT / "config" / "generation.json",
         help="Configuración independiente del módulo de generación.",
     )
-    parser.add_argument("--top-k", type=int, default=5)
-    parser.add_argument("--candidate-k", type=int, default=20)
-    parser.add_argument("--prefetch-k", type=int, default=20)
-    parser.add_argument("--rrf-k", type=int, default=60)
-    parser.add_argument("--batch-size", type=int, default=4)
+    # Valores por defecto = línea base (query.baseline.LB1).
+    parser.add_argument("--top-k", type=int, default=LB1.top_k)
+    parser.add_argument("--candidate-k", type=int, default=LB1.candidate_k)
+    parser.add_argument("--prefetch-k", type=int, default=LB1.prefetch_k)
+    parser.add_argument("--rrf-k", type=int, default=LB1.rrf_k)
+    parser.add_argument("--batch-size", type=int, default=LB1.rerank_batch_size)
     parser.add_argument("--reranker-model", type=Path)
     parser.add_argument(
         "--rerank",
@@ -99,18 +103,18 @@ def _parser() -> argparse.ArgumentParser:
         default=DEFAULT_HIERARCHY_RELATIONS,
         help="Relaciones del catálogo a seguir, separadas por coma: desarrolla, compatible.",
     )
-    parser.add_argument("--hierarchy-depth", type=int, default=2,
+    parser.add_argument("--hierarchy-depth", type=int, default=LB1.hierarchy_depth,
                         help="Saltos máximos hacia normas superiores (predeterminado: 2).")
-    parser.add_argument("--hierarchy-max-units", type=int, default=3,
+    parser.add_argument("--hierarchy-max-units", type=int, default=LB1.hierarchy_max_units,
                         help="Unidades de normas superiores que se agregan como máximo.")
-    parser.add_argument("--hierarchy-max-per-document", type=int, default=1,
+    parser.add_argument("--hierarchy-max-per-document", type=int, default=LB1.hierarchy_max_per_document,
                         help="Unidades por norma superior como máximo.")
-    parser.add_argument("--hierarchy-max-tokens", type=int, default=1500,
+    parser.add_argument("--hierarchy-max-tokens", type=int, default=LB1.hierarchy_max_tokens,
                         help="Presupuesto estimado de tokens de las unidades de jerarquía (aparte del base).")
     parser.add_argument(
         "--hierarchy-search",
         choices=("joint", "per-document"),
-        default="joint",
+        default=LB1.hierarchy_search,
         help=(
             "joint: una búsqueda filtrada por todas las normas superiores (más rápida; una norma puede "
             "acaparar los candidatos). per-document: una búsqueda por norma, rerank conjunto (más variedad)."
@@ -138,7 +142,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-unit-tokens",
         type=int,
-        default=1500,
+        default=LB1.max_unit_tokens,
         help="En --expansion units, una unidad más larga se envía solo con sus chunks pertinentes.",
     )
     parser.add_argument(
@@ -192,7 +196,7 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
             parser.error("--retrieval-mode hierarchical requiere --expansion units.")
         args.expansion = "units"
         if args.hierarchy_candidate_k is None:
-            args.hierarchy_candidate_k = 20 if args.hierarchy_search == "joint" else 5
+            args.hierarchy_candidate_k = LB1.hierarchy_candidate_k if args.hierarchy_search == "joint" else 5
         if min(args.hierarchy_depth, args.hierarchy_max_units, args.hierarchy_max_per_document,
                args.hierarchy_max_tokens, args.hierarchy_candidate_k) < 1:
             parser.error("Los parámetros --hierarchy-* deben ser positivos.")
@@ -202,6 +206,28 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
             parser.error(str(exc))
     elif args.expansion is None:
         args.expansion = "neighbors"
+
+
+def _baseline_from_args(args: argparse.Namespace) -> Baseline:
+    """Parámetros del pipeline B/C: la línea base con lo que se cambió por CLI."""
+    return replace(
+        LB1,
+        top_k=args.top_k,
+        candidate_k=args.candidate_k,
+        prefetch_k=args.prefetch_k,
+        rrf_k=args.rrf_k,
+        rerank_batch_size=args.batch_size,
+        max_context_tokens=args.max_context_tokens or DEFAULT_UNITS_MAX_CONTEXT_TOKENS,
+        max_unit_tokens=args.max_unit_tokens,
+        hierarchy_relations=tuple(resolve_relations(args.hierarchy_relations.split(","))),
+        hierarchy_depth=args.hierarchy_depth,
+        hierarchy_search=args.hierarchy_search,
+        hierarchy_candidate_k=args.hierarchy_candidate_k or LB1.hierarchy_candidate_k,
+        hierarchy_max_units=args.hierarchy_max_units,
+        hierarchy_max_per_document=args.hierarchy_max_per_document,
+        hierarchy_max_tokens=args.hierarchy_max_tokens,
+        hierarchy_min_score=args.hierarchy_min_score,
+    )
 
 
 def _units_path(args: argparse.Namespace, config: dict[str, Any]) -> Path | None:
@@ -545,93 +571,51 @@ def _run_pipeline(
     timings["qdrant_open"] = time.perf_counter() - stage_start
 
     try:
-        state["stage"] = "retrieval"
-        stage_start = time.perf_counter()
-        query_vector = encode_query(e5, args.query, config)
-        timings["query_embedding"] = time.perf_counter() - stage_start
-
-        stage_start = time.perf_counter()
-        candidates = hybrid_search(
-            client,
-            config,
-            query_vector,
-            args.query,
-            args.prefetch_k,
-            args.candidate_k,
-            args.rrf_k,
-        )
-        timings["hybrid_retrieval_and_rrf"] = time.perf_counter() - stage_start
-        state["candidates"] = candidates
-        if not candidates:
-            raise RuntimeError("La recuperación híbrida no devolvió candidatos.")
-
-        state["stage"] = "reranking"
-        if args.rerank:
-            stage_start = time.perf_counter()
-            reranked = rerank(reranker, args.query, candidates, args.batch_size)
-            timings["reranking"] = time.perf_counter() - stage_start
-            ranked_results = reranked[:args.top_k]
-        else:
-            timings["reranking"] = None
-            ranked_results = [(point, None) for point in candidates[:args.top_k]]
-        state["ranked_results"] = ranked_results
-        if not ranked_results:
-            raise RuntimeError("No hay candidatos con texto para construir el contexto.")
-
-        state["stage"] = "context_builder"
-        stage_start = time.perf_counter()
         if unit_index is not None:
-            # Small-to-big: cada chunk recuperado se sube a su artículo.
-            fetch_chunk_texts = qdrant_chunk_fetcher(client, config["collection_name"])
-            context_result = build_unit_context(
+            # B/C: el mismo pipeline que usa el servicio /retrieve (query.pipeline).
+            run_units_pipeline(
                 args.query,
-                ranked_results,
-                unit_index,
-                fetch_chunk_texts=fetch_chunk_texts,
-                max_tokens=args.max_context_tokens or DEFAULT_UNITS_MAX_CONTEXT_TOKENS,
-                max_unit_tokens=args.max_unit_tokens,
+                e5=e5,
+                reranker=reranker,
+                client=client,
+                config=config,
+                unit_index=unit_index,
+                catalog=catalog,
+                params=_baseline_from_args(args),
+                rerank=args.rerank,
+                hierarchy=args.retrieval_mode == "hierarchical",
+                state=state,
             )
-            timings["context_builder"] = time.perf_counter() - stage_start
-            if args.retrieval_mode == "hierarchical":
-                # Arquitectura C: misma pregunta, búsqueda acotada a las normas superiores.
-                def search_superior(document_ids: list[str]) -> list[tuple[Any, float | None]]:
-                    groups = [document_ids] if args.hierarchy_search == "joint" else [[d] for d in document_ids]
-                    found = []
-                    for group in groups:
-                        found += hybrid_search(
-                            client, config, query_vector, args.query,
-                            max(args.prefetch_k, args.hierarchy_candidate_k), args.hierarchy_candidate_k,
-                            args.rrf_k, document_ids=group,
-                        )
-                    if reranker is None and args.hierarchy_search == "per-document":
-                        found.sort(key=lambda point: point.score or 0.0, reverse=True)
-                    if reranker is not None:
-                        return rerank(reranker, args.query, found, args.batch_size)
-                    return [(point, None) for point in found]
-
-                state["stage"] = "hierarchy"
-                stage_start = time.perf_counter()
-                context_result = expand_with_hierarchy(
-                    args.query,
-                    context_result,
-                    unit_index,
-                    catalog,
-                    search_superior,
-                    relations=tuple(args.hierarchy_relations.split(",")),
-                    max_depth=args.hierarchy_depth,
-                    max_units=args.hierarchy_max_units,
-                    max_per_document=args.hierarchy_max_per_document,
-                    min_score=args.hierarchy_min_score,
-                    max_tokens=args.hierarchy_max_tokens,
-                    max_unit_tokens=args.max_unit_tokens,
-                    fetch_chunk_texts=fetch_chunk_texts,
-                )
-                # Etapa propia: búsqueda filtrada + rerank + selección de normas superiores.
-                timings["hierarchy"] = time.perf_counter() - stage_start
-                timings["hierarchy_search"] = (
-                    context_result.metadata.get("timings_seconds") or {}
-                ).get("hierarchy_search")
         else:
+            state["stage"] = "retrieval"
+            stage_start = time.perf_counter()
+            query_vector = encode_query(e5, args.query, config)
+            timings["query_embedding"] = time.perf_counter() - stage_start
+
+            stage_start = time.perf_counter()
+            candidates = hybrid_search(
+                client, config, query_vector, args.query,
+                args.prefetch_k, args.candidate_k, args.rrf_k,
+            )
+            timings["hybrid_retrieval_and_rrf"] = time.perf_counter() - stage_start
+            state["candidates"] = candidates
+            if not candidates:
+                raise RuntimeError("La recuperación híbrida no devolvió candidatos.")
+
+            state["stage"] = "reranking"
+            if args.rerank:
+                stage_start = time.perf_counter()
+                ranked_results = rerank(reranker, args.query, candidates, args.batch_size)[:args.top_k]
+                timings["reranking"] = time.perf_counter() - stage_start
+            else:
+                timings["reranking"] = None
+                ranked_results = [(point, None) for point in candidates[:args.top_k]]
+            state["ranked_results"] = ranked_results
+            if not ranked_results:
+                raise RuntimeError("No hay candidatos con texto para construir el contexto.")
+
+            state["stage"] = "context_builder"
+            stage_start = time.perf_counter()
             builder_config = {
                 **config,
                 "context_builder": {
@@ -643,16 +627,11 @@ def _run_pipeline(
                     "max_tokens": args.max_context_tokens,
                 },
             }
-            context_result = build_context(args.query, ranked_results, client, builder_config)
+            state["context_result"] = build_context(args.query, ranked_results, client, builder_config)
             timings["context_builder"] = time.perf_counter() - stage_start
-        if unit_index is not None:
-            # Mismo formato que rag-istae-api: [unit_id] agrupados por documento.
-            stage_start = time.perf_counter()
-            context_result = render_documents(context_result, catalog)
-            timings["presentation"] = time.perf_counter() - stage_start
-        state["context_result"] = context_result
     finally:
         client.close()
+    context_result = state["context_result"]
 
     if generation_config is None:  # --no-generation
         timings["generation"] = None

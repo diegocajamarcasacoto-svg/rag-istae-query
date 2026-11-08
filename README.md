@@ -48,6 +48,10 @@ generation.generate_answer (System Prompt externo + Gemini vía google-genai)
 | `src/query/retrieval.py` | Carga E5, abre el cliente Qdrant y ejecuta búsqueda vectorial, BM25 e híbrida con RRF. |
 | `src/query/reranking.py` | Carga el CrossEncoder local y reordena los candidatos por score. |
 | `src/query/units.py` | Expansión por artículo (*small-to-big*): índice `chunk_id → unidad` desde `units.jsonl` y construcción del contexto con artículos completos. |
+| `src/query/baseline.py` | Parámetros de la línea base (`LB1`), compartidos por el CLI y el servicio. |
+| `src/query/pipeline.py` | Pipeline B/C por artículos (híbrida → rerank opcional → artículos → jerarquía opcional → presentación), compartido por `query_rag.py` y el servicio. |
+| `src/query/engine.py` | Motor residente: carga los recursos una vez y ejecuta el pipeline con la línea base. |
+| `src/query/service/` | Servicio HTTP `POST /retrieve` (FastAPI): configuración por variables de entorno, contrato y caché. |
 | `src/query/hierarchy/` | Recuperación jerárquica (arquitectura C): `catalog.py` carga el catálogo normativo (rangos y relaciones); `expansion.py` calcula las normas superiores relacionadas y agrega sus artículos. |
 | `src/query/context/` | Context Builder: detector y validador de estructura (artículo, capítulo, sección, listas, notas), expansión de vecinos, fusión, deduplicación y presupuesto de tokens. |
 | `src/query/generation/` | Configuración, construcción del prompt, adaptador de proveedor (`providers/gemini.py`), normalización de respuestas y errores explícitos (`GenerationConfigurationError`, `GenerationProviderError`). |
@@ -58,7 +62,7 @@ Modelo de reranking actual: `bge-reranker-base` (más liviano que `bge-reranker-
 ## Instalacion
 
 1. Clone este repositorio y cree un entorno virtual Python 3.11.
-2. Instale `pip install -r requirements.txt` (`sentence-transformers`, `qdrant-client`, `torch`, `google-genai`).
+2. Instale `pip install -r requirements.txt` (`sentence-transformers`, `qdrant-client`, `torch`, `google-genai`, `httpx`, y `fastapi`/`uvicorn` para el servicio).
 3. Prepare y valide `rag-istae-resources`.
 4. Copie `config/local.example.json` a `config/local.json` y asigne rutas absolutas al E5, BGE y Qdrant compartidos.
 5. Para generar respuestas, copie `config/generation.example.json` a `config/generation.json` y defina la variable de entorno `GEMINI_API_KEY`.
@@ -196,7 +200,7 @@ python .\scripts\query_rag.py "¿Qué requisitos necesito cumplir para que me de
 
 ## Línea base B/C (LB-1, 2026-11-06)
 
-Configuración de referencia para comparar B (`hybrid`) y C (`hierarchical`). **C = B + una sola capa**: hasta 3 artículos de las normas de rango superior con las que las normas recuperadas tienen relación `Desarrolla` o `Debe ser compatible con`. Los valores son los predeterminados del CLI y `tests/test_baseline.py` los fija: cambiarlos debe ser una decisión explícita.
+Configuración de referencia para comparar B (`hybrid`) y C (`hierarchical`). **C = B + una sola capa**: hasta 3 artículos de las normas de rango superior con las que las normas recuperadas tienen relación `Desarrolla` o `Debe ser compatible con`. Los valores están en `src/query/baseline.py` (`LB1`), son los predeterminados del CLI y del servicio `/retrieve`, y `tests/test_baseline.py` los fija: cambiarlos debe ser una decisión explícita.
 
 | Etapa | Parámetro | B | C |
 |---|---|---|---|
@@ -212,6 +216,8 @@ Configuración de referencia para comparar B (`hybrid`) y C (`hierarchical`). **
 | Generación | `config/generation.openrouter.json` (Nemotron `:free`, temperatura 0,2, `max_output_tokens` 2.048, `reasoning.effort` none) | ✓ | ✓ |
 
 Por qué incluir las dos relaciones: `Desarrolla` forma un árbol fijo (reglamento interno → Estatuto → LOES) que nunca alcanza el Reglamento de Régimen Académico desde una norma interna, porque esa relación solo existe como «Debe ser compatible con». Para un reglamento interno, las normas superiores con las que debe ser coherente son las que pueden prevalecer en caso de conflicto. El riesgo, la dilución entre muchas normas destino, se controla con el tope de un artículo por norma y queda medido en `hierarchy_unit_ids`.
+
+La justificación bibliográfica de cada parámetro está en [`Justificacion_Linea_Base.md`](Justificacion_Linea_Base.md). Indica la fuerza de la evidencia, las referencias y qué valores son decisiones de diseño, como los topes de la jerarquía. `candidate_k` = 20 está además ratificado empíricamente en [`Resultados_Prueba5_Candidatos.md`](Resultados_Prueba5_Candidatos.md).
 
 Pendiente de decisión: la API usa `LLM_REASONING_EFFORT=medium` y `LLM_MAX_OUTPUT_TOKENS=8192`, mientras que la generación local usa `effort: none` y 2.048. Para comparar B/C con A/AJ, ambos deben coincidir.
 
@@ -233,12 +239,59 @@ Hipótesis registradas, sin aplicar:
 - búsqueda por norma;
 - otra consulta para la jerarquía.
 
+Hipótesis retiradas:
+- 50 candidatos antes del rerank en lugar de 20. Se evaluó en la Prueba 5 (2026-11-07, 10 preguntas). Ninguna pregunta mejora con 50, cinco empeoran en nDCG@5 y el reranking tarda unas 3 veces más. Se ratifica 20: ver [`Resultados_Prueba5_Candidatos.md`](Resultados_Prueba5_Candidatos.md).
+
+Errores observados de LB-1, todavía sin variante:
+- Q29 y Q30: las secciones de `INT02` acaparan el top 5, y no se recuperan ni el indicador CACES (EXT09) ni los artículos de INT06 o INT18.
+
+### Decisión pendiente: rerank sí o no
+
+LB-1 mantiene el rerank mientras no haya evidencia en contra; el servicio lo deja elegir por consulta (`rerank`, por defecto `true`). La decisión se tomará con una prueba de un solo factor (con o sin rerank, mismos 20 candidatos), medida a nivel de **artículos** sobre la salida real de B y de C, sin LLM y con las 30 preguntas:
+- por pregunta: artículos esperados presentes en el contexto (recall), artículos pertinentes / artículos enviados (precisión), posición del primer artículo pertinente, tokens del contexto y tiempo de rerank;
+- en C, además, cuántos artículos agregados por la capa jerárquica son esperados y cuántos son ruido (la capa jerárquica tiene su propio rerank, una segunda etapa);
+- criterio: quitar el rerank si no mejora; mantenerlo si mejora de forma consistente; si solo mejora una etapa (p. ej. la jerárquica), mantenerlo solo en esa etapa como variante explícita.
+
+Indicio previo (datos de la Prueba 5, por fragmento): MRR ≈ 0,58 sin rerank frente a 0,60 con rerank. Pipitone & Alami (2024) encontraron que un reranker general rendía peor que no reranquear en el dominio legal.
+
+### Conversación: una conversación = un tema
+
+La primera pregunta del usuario define el tema y el contexto. Las preguntas de seguimiento se responden **con los artículos recuperados para la primera pregunta, sin recuperar de nuevo**; para otro tema se abre otra conversación.
+
+- **Cómo se aplica:** `rag-istae-web` envía en cada turno todo el historial (`useChat.ts`), así que la primera pregunta siempre está en `history[0]`. Las clases B/C de la API envían a `/retrieve` esa primera pregunta (o `question` si la conversación empieza); el historial completo sigue yendo al LLM, como en A/AJ. Como la recuperación es determinista, cada turno obtiene el mismo contexto, y el servicio lo cachea. `/retrieve` no recibe `history`.
+- **Prompt:** `rag_es.txt` aclara que el contexto corresponde a la primera pregunta y que, si un seguimiento trata otro tema o necesita artículos ausentes, el modelo use la frase de abstención y sugiera abrir una conversación nueva.
+- **Ya existente en el frontend:** la arquitectura queda fija por conversación (`isArchitectureLocked`). Límite de la API: como máximo 20 mensajes de historial (unos 10 turnos).
+- **Limitaciones:**
+  - el «tema» para el usuario es más amplio que los ~5 artículos del contexto: a medida que avanza la conversación, aumentan las abstenciones;
+  - si la primera recuperación falla (como Q29/Q30) o la primera pregunta es vaga, toda la conversación hereda ese contexto; reformular no ayuda, hay que abrir otra conversación;
+  - A/AJ no tienen esta limitación porque siempre ven todo el corpus: es una diferencia de diseño de B/C que se declara en la tesis.
+- **Evaluación prevista:** el Gold Standard tiene solo preguntas de un turno. Para medir esto hace falta un conjunto pequeño de seguimientos (1 o 2 por pregunta), registrando cuántos se responden con el contexto fijo y cuántos terminan en abstención (`turn` en el registro del servicio distingue primer turno y seguimientos).
+- **Hipótesis registrada, no aplicada:** «complemento por turno»: además del contexto fijo, buscar con la pregunta actual y agregar como máximo 1 o 2 artículos nuevos. Se prueba solo si las abstenciones resultan frecuentes.
+
 Casos pendientes de validación jurídica:
 - **Q27 (convalidación de prácticas de hace 7 años): remisión con techo.** El RRA (`EXT02-art43`) dice que las prácticas «son objeto de» convalidación «según lo establecido en la normativa interna de cada IES, hasta un máximo de diez (10) años». El ISTAE (`INT15-art22`, `INT13-art48`) fija 5 años. El texto admite dos lecturas:
   - la IES solo regula el procedimiento y los 10 años prevalecen por jerarquía, que es la respuesta esperada del Gold Standard;
   - la IES fija su plazo dentro del techo, y entonces valen los 5 años.
 
   Lo debe validar un abogado. Mientras tanto, `jerarquia_es.txt` no se ajusta a ninguna de las dos lecturas: codificar el criterio en el prompt sería ajustarlo a una interpretación no validada. Para calificar Q27 se propone una rúbrica en lugar de exigir solo el plazo: identifica los dos plazos y cita ambas normas; reconoce la mayor jerarquía del RRA; explica la consecuencia según la lectura validada, o al menos la tensión entre la remisión y el máximo; e incluye el trámite de `INT15-art22`.
+
+## Servicio de recuperación (`POST /retrieve`)
+
+Servicio HTTP (FastAPI) que carga E5, el reranker, `units.jsonl`, el catálogo y Qdrant **una sola vez** y atiende consultas de B y C. No genera respuesta: `rag-istae-api` arma el prompt y llama al LLM con su propio modelo. Contrato completo, ejemplos y variables de entorno: [`docs/contrato_retrieve.md`](docs/contrato_retrieve.md).
+
+- **Request:** `question` (en una conversación, la primera pregunta del usuario), `rerank` (por defecto `true`), `hierarchy` (`false` = B, `true` = C), `document_ids` opcional; `turn`, `question_id` y `tag` solo para el registro; `debug`. Los parámetros de la línea base no se aceptan en el request (422): los fija `query.baseline.CURRENT_BASELINE` (LB-1).
+- **Response:** artículos (`unit_id`, norma, rango, texto, `score`, `origin` base o jerarquía), `context` ya renderizado en el formato de la API, tokens estimados, `cached`, `index_version` y tiempos.
+- **Mismo pipeline que los scripts:** `query.pipeline.run_units_pipeline` lo usan `query_rag.py` (rama `--expansion units`) y el motor residente `query.engine.RetrievalEngine`.
+- **Caché:** LRU por (pregunta, `rerank`, `hierarchy`, `document_ids`); los turnos de seguimiento de una conversación no repiten la recuperación.
+- **Registro:** cada llamada (también las cacheadas y las fallidas) va a `logs/service/` con el formato de `query.run_log`, sin la clave.
+
+```powershell
+$env:PYTHONPATH = "src;scripts"
+$env:RAG_API_KEY = "<clave>"              # o $env:RAG_AUTH_DISABLED = "true" solo en local
+python .\scripts\serve_retrieval.py       # http://127.0.0.1:8100/docs
+```
+
+Qdrant local admite un solo proceso: mientras el servicio está activo no se pueden ejecutar los scripts de consulta sobre el mismo `vector_store/qdrant`.
 
 ## Validar el pipeline completo
 
@@ -378,7 +431,7 @@ Las pruebas unitarias se ejecutan sin conectar a Qdrant ni a Gemini:
 
 ```powershell
 $env:PYTHONPATH = "src;scripts"
-python -m unittest discover -s tests -p "test_*.py" -v              # suite completa (103 pruebas)
+python -m unittest discover -s tests -p "test_*.py" -v              # suite completa (127 pruebas)
 python -m unittest discover -s tests -p "test_context_builder.py" -v
 python -m unittest discover -s tests -p "test_generation.py" -v
 python -m unittest discover -s tests -p "test_structure_detector.py" -v
@@ -403,7 +456,7 @@ Los tests usan mocks/fakes y no requieren conectar con Gemini o Qdrant, reindexa
 | Generación con Gemini | Implementada (`query_rag.py`), con pruebas unitarias |
 | Generación con OpenRouter (Nemotron) | Implementada (`--generation-config`), con pruebas unitarias; sin validación real |
 | Evaluación sistemática con Gold Standard | En curso: ver `Guia_Pruebas_Recuperación.md` |
-| Servicio persistente (modelos y Qdrant cargados una sola vez) | Pendiente |
+| Servicio persistente `POST /retrieve` (modelos y Qdrant cargados una sola vez) | Implementado, con pruebas unitarias (`test_service.py`, `test_pipeline.py`); ver «Servicio de recuperación» |
 | Hosting del servicio de recuperación (arquitectura B del chat) | **Pendiente.** Prototipo académico: buscar un entorno cloud gratuito (candidatos por verificar: Hugging Face Spaces CPU, Oracle Cloud Always Free) o, si se consigue, una máquina del instituto. La web (Vercel) y `rag-istae-api` (Render) ya están publicadas en hostings gratuitos independientes. |
 
 Cada ejecución de script carga E5, BGE y abre Qdrant de nuevo; en las mediciones iniciales esa inicialización representó la mayor parte de la latencia (del orden de 4–5 s por cada recurso), mientras que la búsqueda híbrida tomó alrededor de 0,3 s. La evaluación de la recuperación (vectorial, BM25, híbrida e híbrida con reranking frente al Gold Standard) se describe en [Guia_Pruebas_Recuperación.md](Guia_Pruebas_Recuperación.md).

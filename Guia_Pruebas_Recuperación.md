@@ -427,6 +427,60 @@ La pregunta fundamental es:
 
 **¿El reranking coloca los fragmentos realmente relevantes en mejores posiciones o desplaza fragmentos que eran importantes para responder la pregunta?**
 
+### Prueba 5. Profundidad de candidatos antes del reranking (20 frente a 50)
+
+La línea base LB-1 reranquea solo 20 candidatos (`--candidate-k 20 --prefetch-k 20`) para limitar el costo del reranker en CPU. Es el parámetro con menos respaldo bibliográfico: la literatura reranquea grupos de candidatos mucho mayores (ver `Justificacion_Linea_Base.md`, sección 2.5). Esta prueba comprueba si el valor 20 deja fuera fragmentos relevantes.
+
+Se cambia **un solo factor**, la cantidad de candidatos (20 → 50). Se mantienen `--top-k 5`, `--rrf-k 60`, el reranker y la colección.
+
+**5a. ¿El fragmento esperado está entre los candidatos?**
+Se mide sobre la recuperación híbrida, sin reranking:
+
+```powershell
+python .\scripts\search_hybrid.py "pregunta del Gold Standard" --top-k 50 --prefetch-k 50 --rrf-k 60 | Select-String "chunk_id="
+```
+
+`Select-String` deja solo las líneas `#posición | RRF=… | chunk_id=…`, porque el script también imprime el texto de cada resultado.
+
+Registrar la **posición del primer fragmento esperado** (`chunk_id_esperado`) en la lista de 50:
+- **posición 1–20:** ya entraba con la línea base;
+- **posición 21–50:** la línea base lo pierde y 50 lo rescata;
+- **ausente:** ni 50 alcanza; es un problema de la recuperación inicial, no de la profundidad.
+
+Con estas posiciones se calcula Recall@20 y Recall@50 de la lista de candidatos.
+
+**5b. Efecto en el resultado final**
+Se mide sobre la recuperación híbrida con reranking:
+
+```powershell
+python .\scripts\search_reranked.py "pregunta del Gold Standard" --top-k 5 --candidate-k 50 --prefetch-k 50 --rrf-k 60
+```
+
+Comparar contra la Prueba 4 (`--candidate-k 20 --prefetch-k 20`) con Precision@5, Recall@5, MRR y nDCG@5, y registrar el tiempo de reranking de ambas.
+
+Un grupo mayor de candidatos también puede **empeorar** el resultado: el reranker podría subir fragmentos parecidos pero no pertinentes, el mismo riesgo descrito en la sección 8. Por eso se registran tanto las preguntas que mejoran como las que empeoran.
+
+**Criterio de decisión**
+- Comparar por pregunta (pares 20/50): cuántas mejoran, cuántas empeoran y cuántas no cambian.
+- Aplicar una prueba pareada sobre MRR o nDCG@5, por ejemplo Wilcoxon, como hacen Soriano et al. (2026) con NDCG@10.
+- Si 50 mejora de forma consistente y el aumento de latencia es aceptable para el servicio, la línea base sube a 50 como una nueva versión (LB-2), documentada.
+- Si no mejora, LB-1 mantiene 20 y la tesis puede citar esta prueba como justificación empírica del valor.
+
+**Ejecución automatizada.** `scripts/eval_candidate_depth.py` ejecuta 5a y 5b para las preguntas indicadas y escribe CSV, TXT y JSON en `logs/prueba5/`:
+
+```powershell
+python .\scripts\eval_candidate_depth.py --questions Q02,Q13,Q26
+```
+
+Sin `--questions`, recorre las 30 preguntas. Como el Gold Standard no tiene `chunk_id_esperado`, el script considera relevante un fragmento si pertenece al artículo esperado según `units.jsonl`.
+
+**Resultado (2026-11-07, 10 preguntas): se ratifica 20.**
+- Ninguna pregunta mejora con 50 y cinco empeoran en nDCG@5.
+- Las medias de 20 frente a 50 son: nDCG@5 0,338 frente a 0,266, y MRR 0,600 frente a 0,508.
+- El reranking pasa de 4,4 s a 13,8 s.
+
+Detalle, limitaciones y condiciones para reabrir la decisión: [`Resultados_Prueba5_Candidatos.md`](Resultados_Prueba5_Candidatos.md).
+
 ---
 
 ## 8. Consideraciones especiales sobre el reranking
@@ -571,6 +625,10 @@ Determinar si RRF aprovecha las ventajas de ambas estrategias y mejora la recupe
 
 Determinar si el reranking mejora la posición de los fragmentos relevantes, especialmente en los primeros resultados.
 
+**C2. Profundidad de candidatos (20 frente a 50)**
+
+Determinar si reranquear 50 candidatos en lugar de 20 recupera fragmentos que la línea base pierde (Prueba 5a) y si eso mejora el resultado final sin un costo de latencia inaceptable (Prueba 5b).
+
 **D. Comportamiento por tipo de pregunta**
 
 Identificar si existen preguntas que se benefician de la búsqueda léxica, de la semántica o del reranking.
@@ -594,7 +652,7 @@ El análisis debe permitir identificar si los problemas provienen de la recupera
 Para que los resultados sean comparables, se deben respetar las siguientes condiciones:
 
 1. Utilizar exactamente las mismas preguntas del Gold Standard para las cuatro estrategias.
-2. Mantener constantes los parámetros de recuperación.
+2. Mantener constantes los parámetros de recuperación. La única excepción es la Prueba 5, que cambia solo la cantidad de candidatos (20 → 50).
 3. Mantener la misma colección Qdrant durante toda la evaluación.
 4. No modificar el modelo de embeddings durante las pruebas.
 5. No modificar el modelo de reranking durante la comparación.

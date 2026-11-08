@@ -75,6 +75,10 @@ class UnitIndex:
     def chunk_count(self) -> int:
         return len(self._by_chunk)
 
+    @property
+    def document_ids(self) -> frozenset[str]:
+        return frozenset(unit.document_id for unit in self._units.values() if unit.document_id)
+
 
 def load_units(path: Path) -> UnitIndex:
     """Lee ``units.jsonl`` y valida su estructura mínima."""

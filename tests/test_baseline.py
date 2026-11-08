@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 import query_rag
+from query.baseline import CURRENT_BASELINE, LB1
 
 ROOT = Path(__file__).resolve().parents[1]
 QUESTION = "pregunta"
@@ -49,6 +50,27 @@ class BaselineTests(unittest.TestCase):
         # La frase de abstención se reserva para cuando no hay información pertinente.
         self.assertIn('Empieza con "No encontré en la normativa disponible" solo si ninguno', rag)
         self.assertIn("no empieces con esa frase", rag)
+        # Conversación de un solo tema: el contexto es el de la primera pregunta.
+        self.assertIn("primera pregunta de esta conversación", rag)
+        self.assertIn("sugiere abrir una conversación nueva", rag)
+
+    def test_baseline_constants_match_cli_defaults(self) -> None:
+        self.assertEqual(LB1.id, "LB-1")
+        self.assertEqual(CURRENT_BASELINE, LB1)
+        b = _args("--expansion", "units")
+        c = _args("--retrieval-mode", "hierarchical")
+        self.assertEqual(query_rag._baseline_from_args(b), LB1)
+        self.assertEqual(query_rag._baseline_from_args(c), LB1)
+        self.assertEqual(
+            (LB1.top_k, LB1.candidate_k, LB1.prefetch_k, LB1.rrf_k, LB1.max_context_tokens, LB1.max_unit_tokens),
+            (5, 20, 20, 60, 4000, 1500),
+        )
+        self.assertEqual(LB1.hierarchy_relations, ("Desarrolla", "Debe ser compatible con"))
+        self.assertEqual(
+            (LB1.hierarchy_depth, LB1.hierarchy_search, LB1.hierarchy_candidate_k, LB1.hierarchy_max_units,
+             LB1.hierarchy_max_per_document, LB1.hierarchy_max_tokens, LB1.hierarchy_min_score),
+            (2, "joint", 20, 3, 1, 1500, None),
+        )
 
 
 if __name__ == "__main__":
