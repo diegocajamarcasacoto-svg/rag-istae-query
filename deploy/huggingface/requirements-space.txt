@@ -1,0 +1,14 @@
+# Dependencias del servicio /retrieve en el Space (torch se instala aparte, desde el índice CPU de PyTorch).
+# Versiones fijadas = las del .venv con el que se validó la línea base LB-1 (2026-11-09).
+sentence-transformers==5.7.0
+transformers==5.22.0
+tokenizers==0.23.3
+safetensors==0.8.0
+numpy==2.4.6
+scipy==1.17.1
+scikit-learn==1.9.1
+qdrant-client==1.20.0
+fastapi==0.162.2
+starlette==1.10.0
+pydantic==2.14.2
+uvicorn==0.54.0
