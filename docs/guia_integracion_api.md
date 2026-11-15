@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     ...
     # Servicio de recuperación (rag-istae-query) para B y C.
     retrieval_url: str = "http://127.0.0.1:8100"
-    retrieval_api_key: SecretStr
+    rag_api_key: SecretStr  # mismo nombre y valor que RAG_API_KEY del servicio
     retrieval_timeout_seconds: float = 90   # C tarda hasta ~12 s en CPU; más si el servicio estaba dormido
     # A/AJ (contexto largo) quedan como históricos: no se cargan salvo que se pida.
     enable_long_context: bool = False
@@ -88,7 +88,7 @@ class Settings(BaseSettings):
 | Variable de entorno | Ejemplo | Nota |
 |---|---|---|
 | `RETRIEVAL_URL` | `http://127.0.0.1:8100` (local) | URL pública del servicio cuando se publique (hosting pendiente) |
-| `RETRIEVAL_API_KEY` | (secreto) | la misma que `RAG_API_KEY` del servicio |
+| `RAG_API_KEY` | (secreto) | mismo nombre y valor que `RAG_API_KEY` del servicio (así lo implementó la API en `feature/rag-arquitecturas-b-c`) |
 | `RETRIEVAL_TIMEOUT_SECONDS` | `90` | |
 | `ENABLE_LONG_CONTEXT` | `false` | `true` solo para reproducir A/AJ |
 | `LLM_*`, `MAX_HISTORY_MESSAGES`, `CORS_ORIGINS` | sin cambios | para la evaluación de la tesis, `LLM_FALLBACK_MODELS=[]` |
@@ -103,7 +103,7 @@ def build_architectures(settings: Settings) -> tuple[Library | None, dict[str, C
     options = {"max_history_messages": settings.max_history_messages, "max_output_tokens": settings.llm_max_output_tokens}
     retrieval = RetrievalClient(
         base_url=settings.retrieval_url,
-        api_key=settings.retrieval_api_key.get_secret_value(),
+        api_key=settings.rag_api_key.get_secret_value(),
         timeout_seconds=settings.retrieval_timeout_seconds,
     )
     architectures: dict[str, ChatArchitecture] = {
@@ -217,7 +217,7 @@ export function ArticleModal({ unitId, source, number, onClose }: ArticleModalPr
    ```env
    LLM_API_KEY=<clave de OpenRouter>
    RETRIEVAL_URL=http://127.0.0.1:8100
-   RETRIEVAL_API_KEY=clave-local
+   RAG_API_KEY=clave-local
    ENABLE_LONG_CONTEXT=false
    ```
 

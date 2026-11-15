@@ -252,9 +252,14 @@ Hipótesis retiradas:
 Errores observados de LB-1, todavía sin variante:
 - Q29 y Q30: las secciones de `INT02` acaparan el top 5, y no se recuperan ni el indicador CACES (EXT09) ni los artículos de INT06 o INT18.
 
-### Decisión pendiente: rerank sí o no
+### Decisión: rerank sí o no
 
-LB-1 mantiene el rerank mientras no haya evidencia en contra; el servicio lo deja elegir por consulta (`rerank`, por defecto `true`). La decisión se tomará con una prueba de un solo factor (con o sin rerank, mismos 20 candidatos), medida a nivel de **artículos** sobre la salida real de B y de C, sin LLM y con las 30 preguntas:
+**Decidido el 2026-11-15: el servicio `/retrieve` usa `rerank: false` por defecto** (se puede pedir `true` por consulta). La prueba del 2026-11-13 (50 preguntas del Gold Standard v4, métricas sobre artículos deduplicados, B y C) dio estos resultados:
+- sin rerank, igual o mejor: en C, Recall@3 0,59 frente a 0,49 y MRR 0,65 frente a 0,55, sin diferencias significativas (Wilcoxon, p ≥ 0,07);
+- unas 6 veces más rápido (C: 1,5 s frente a 9,2 s);
+- el contexto final, prácticamente igual.
+
+El detalle está en `logs/recall_retrieve/` y en la rama `mejoras-recuperacion`. `query_rag.py` conserva `--rerank` por defecto, para reproducir LB-1 tal como se definió. La prueba siguió este diseño, acordado antes de ejecutarla: un solo factor (con o sin rerank, mismos 20 candidatos), medida a nivel de **artículos** sobre la salida real de B y de C, sin LLM. Se planificó con las 30 preguntas validadas y se ejecutó con las 50 del Gold Standard v4:
 - por pregunta: artículos esperados presentes en el contexto (recall), artículos pertinentes / artículos enviados (precisión), posición del primer artículo pertinente, tokens del contexto y tiempo de rerank;
 - en C, además, cuántos artículos agregados por la capa jerárquica son esperados y cuántos son ruido (la capa jerárquica tiene su propio rerank, una segunda etapa);
 - criterio: quitar el rerank si no mejora; mantenerlo si mejora de forma consistente; si solo mejora una etapa (p. ej. la jerárquica), mantenerlo solo en esa etapa como variante explícita.
@@ -286,7 +291,7 @@ Casos pendientes de validación jurídica:
 
 Servicio HTTP (FastAPI) que carga E5, el reranker, `units.jsonl`, el catálogo y Qdrant **una sola vez** y atiende consultas de B y C. No genera respuesta: `rag-istae-api` arma el prompt y llama al LLM con su propio modelo. Contrato completo, ejemplos y variables de entorno: [`docs/contrato_retrieve.md`](docs/contrato_retrieve.md). Para instalarlo en otro equipo con el paquete de datos (sin reindexar): [`docs/guia_ambiente_local.md`](docs/guia_ambiente_local.md). Para publicarlo en Hugging Face Spaces (Docker): [`docs/guia_publicacion_huggingface.md`](docs/guia_publicacion_huggingface.md). Integración de B/C en `rag-istae-api` y `rag-istae-web`, independiente de A/AJ y con los artículos tomados de la respuesta de `/retrieve`: [`docs/guia_integracion_api.md`](docs/guia_integracion_api.md).
 
-- **Request:** `question` (en una conversación, la primera pregunta del usuario), `rerank` (por defecto `true`), `hierarchy` (`false` = B, `true` = C), `document_ids` opcional; `turn`, `question_id` y `tag` solo para el registro; `debug`. Los parámetros de la línea base no se aceptan en el request (422): los fija `query.baseline.CURRENT_BASELINE` (LB-1).
+- **Request:** `question` (en una conversación, la primera pregunta del usuario), `rerank` (por defecto `false`; ver «Decisión: rerank sí o no»), `hierarchy` (`false` = B, `true` = C), `document_ids` opcional; `turn`, `question_id` y `tag` solo para el registro; `debug`. Los parámetros de la línea base no se aceptan en el request (422): los fija `query.baseline.CURRENT_BASELINE` (LB-1).
 - **Response:** artículos (`unit_id`, norma, rango, texto, `score`, `origin` base o jerarquía), `context` ya renderizado en el formato de la API, tokens estimados, `cached`, `index_version` y tiempos.
 - **Mismo pipeline que los scripts:** `query.pipeline.run_units_pipeline` lo usan `query_rag.py` (rama `--expansion units`) y el motor residente `query.engine.RetrievalEngine`.
 - **Caché:** LRU por (pregunta, `rerank`, `hierarchy`, `document_ids`); los turnos de seguimiento de una conversación no repiten la recuperación.

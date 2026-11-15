@@ -60,7 +60,7 @@ Cabecera obligatoria: `X-API-Key: <RAG_API_KEY>`.
 | Campo | Tipo | Por defecto | Descripción |
 |---|---|---|---|
 | `question` | string (1–2.000) | — | Consulta. **En una conversación, la API envía la primera pregunta del usuario** (ver «Conversación»). Los espacios repetidos se normalizan. |
-| `rerank` | bool | `true` | Reordenar los candidatos con `bge-reranker-base`. Decisión pendiente en la tesis: se deja elegible. |
+| `rerank` | bool | `false` | Reordenar los candidatos con `bge-reranker-base`. Por defecto `false` desde el 2026-11-15: en la prueba de un factor (Gold Standard v4, 50 preguntas), sin rerank el resultado fue igual o mejor y unas 6 veces más rápido. Se puede pedir `true` por consulta. |
 | `hierarchy` | bool | `false` | `false` = arquitectura **B**; `true` = **C** (agrega artículos de normas de rango superior relacionadas en el catálogo). |
 | `document_ids` | string[] | todo el corpus | Limita la búsqueda base a esas normas (p. ej. `["INT15"]`). La capa jerárquica puede agregar normas superiores fuera del filtro. |
 | `turn` | int ≥ 1 | — | Solo para el registro: 1 = primera pregunta, > 1 = seguimiento. No afecta la búsqueda ni el caché. |
@@ -98,11 +98,11 @@ Cualquier otro campo, como `top_k`, `candidate_k` o `history`, se rechaza con 42
 ### Ejemplo real (Q27, arquitectura C, 2026-11-07)
 
 ```powershell
-$body = @{ question = "Hice prácticas hace 7 años, ¿todavía me las pueden convalidar?"; hierarchy = $true; question_id = "Q27"; turn = 1 } | ConvertTo-Json
+$body = @{ question = "Hice prácticas hace 7 años, ¿todavía me las pueden convalidar?"; hierarchy = $true; rerank = $true; question_id = "Q27"; turn = 1 } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8100/retrieve -Headers @{ "X-API-Key" = $env:RAG_API_KEY } -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes($body))
 ```
 
-Respuesta resumida:
+Respuesta resumida (la medición original es de LB-1 con rerank; sin `rerank` en el request, el valor por defecto es `false`):
 
 ```json
 {

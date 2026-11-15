@@ -22,7 +22,11 @@ class RetrieveRequest(BaseModel):
         ..., min_length=1, max_length=2000,
         description="Consulta. En una conversación, la API envía la primera pregunta del usuario (el tema).",
     )
-    rerank: bool = Field(True, description="Reordenar los candidatos con el reranker BGE.")
+    rerank: bool = Field(
+        False,
+        description="Reordenar los candidatos con el reranker BGE. Por defecto false: en la prueba de un factor "
+                    "(Gold Standard v4) sin rerank fue igual o mejor y unas 6 veces más rápido.",
+    )
     hierarchy: bool = Field(False, description="false = arquitectura B; true = C (agrega normas superiores).")
     document_ids: list[str] | None = Field(
         None, max_length=100, description="Limita la búsqueda base a estas normas (p. ej. [\"INT08\"]).",

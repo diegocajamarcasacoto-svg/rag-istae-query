@@ -106,7 +106,7 @@ En el Space: *Settings → Variables and secrets → New secret*:
   -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 40 | % {[char]$_})
   ```
 
-Guárdela: es la misma que irá en `RETRIEVAL_API_KEY` de la API. Sin este secret el servicio no arranca, porque se niega a funcionar sin autenticación.
+Guárdela: es la misma que irá en `RAG_API_KEY` de la API (mismo nombre y valor en ambos servicios). Sin este secret el servicio no arranca, porque se niega a funcionar sin autenticación.
 
 ### 7. Subir la carpeta
 
@@ -137,7 +137,7 @@ En el servicio de `rag-istae-api` en Render, agregue estas variables de entorno,
 
 ```env
 RETRIEVAL_URL=https://<usuario>-rag-istae-retrieval.hf.space
-RETRIEVAL_API_KEY=<la misma clave del secret RAG_API_KEY>
+RAG_API_KEY=<la misma clave del secret RAG_API_KEY del Space>
 RETRIEVAL_TIMEOUT_SECONDS=90
 ENABLE_LONG_CONTEXT=false
 ```
@@ -156,5 +156,5 @@ ENABLE_LONG_CONTEXT=false
 | El Space queda en *Runtime error* con `Defina RAG_API_KEY` | Falta el secret | Paso 6; luego *Settings → Restart Space* |
 | *Runtime error* con `FileNotFoundError` sobre `/app/data/...` | La carpeta subida no tenía `data/` completa | Repita los pasos 3 y 7 sin modificar la carpeta |
 | La API recibe tiempo agotado en la primera consulta del día | El Space estaba dormido | Reintentar; para evitarlo, hardware pago |
-| 401 desde la API | `RETRIEVAL_API_KEY` distinta de `RAG_API_KEY` | Igualar ambas |
+| 401 desde la API | `RAG_API_KEY` de Render distinta del secret `RAG_API_KEY` del Space | Igualar ambas |
 | La construcción falla al instalar `torch` | Versión no disponible en el índice CPU de PyTorch | Ajustar `torch==` en `deploy/huggingface/Dockerfile` a una versión disponible y regenerar |

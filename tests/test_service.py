@@ -91,15 +91,17 @@ class ServiceTests(unittest.TestCase):
         b = self._post().json()
         self.assertEqual(b["contract_version"], "1.0")
         self.assertEqual(b["baseline"], "LB-1")
-        self.assertEqual(b["mode"], {"rerank": True, "hierarchy": False, "architecture": "B"})
+        self.assertEqual(b["mode"], {"rerank": False, "hierarchy": False, "architecture": "B"})
         self.assertEqual(b["units"][0]["unit_id"], "INT08-art12")
         self.assertIn("[INT08-art12]", b["context"])
         self.assertFalse(b["cached"])
         self.assertNotIn("debug", b)
-        c = self._post(hierarchy=True, rerank=False).json()
+        self.assertEqual(self.engine.calls[-1][1:3], (False, False))  # sin rerank por defecto
+        c = self._post(hierarchy=True, rerank=True).json()  # el request todavía puede pedirlo
         self.assertEqual(c["mode"]["architecture"], "C")
+        self.assertTrue(c["mode"]["rerank"])
         self.assertEqual(c["units"][-1]["origin"], "hierarchy")
-        self.assertEqual(self.engine.calls[-1][1:3], (False, True))
+        self.assertEqual(self.engine.calls[-1][1:3], (True, True))
 
     def test_follow_up_turns_reuse_cached_context(self) -> None:
         first = self._post(turn=1).json()
