@@ -17,7 +17,7 @@ Servicio `POST /retrieve` de `rag-istae-query`: recupera los artículos de la no
 - `GET /health`: estado, línea base (`LB-1`) y versión del índice.
 - `POST /retrieve`: requiere la cabecera `X-API-Key`. El contrato está en `docs/contrato_retrieve.md` del repositorio `rag-istae-query`.
 
-Este Space se arma con `scripts/prepare_space.py` del repositorio `rag-istae-query`; no se edita a mano. Paquete de datos: `{bundle_version}`, `units_sha256` = `{units_sha256}`.
+Este Space se arma con `scripts/prepare_space.py` del repositorio `rag-istae-query`; no se edita a mano. Paquete de datos: `{bundle_version}`, `units_sha256` = `{units_sha256}`. Se descarga al construir la imagen desde el repositorio de dataset privado `{data_repo}`, fijado al commit `{data_revision}` y verificado con sha256. Requiere el secret `HF_TOKEN`, con lectura sobre ese repositorio.
 
 ## Licencia y uso
 
