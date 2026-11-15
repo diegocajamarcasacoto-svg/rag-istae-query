@@ -72,9 +72,18 @@ Invoke-RestMethod http://127.0.0.1:7860/health
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:7860/retrieve -Headers @{ "X-API-Key" = "clave-local" } -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes('{"question":"Hice prácticas hace 7 años, ¿todavía me las pueden convalidar?","hierarchy":true}'))
 ```
 
-Debe responder `status: ok`, `units: 2748`, y en C los artículos `INT15-art22`, `EXT02-art43`, `INT13-art48`, etc.
+Debe responder `status: ok`, `units: 2748` y `mode.rerank: false`. En C, sin rerank (valor por defecto), los artículos son `INT15-art22`, `EXT01-disp-general-tercera-2`, `EXT09-sec100`, `INT15-art25`, `EXT02-art122` y, por jerarquía, `EXT13-art36`. Con `"rerank": true` en el request aparecen además `EXT02-art43` e `INT13-art48`.
 
-**Resultado de la prueba local (2026-11-09, Docker Desktop, 8 CPU):**
+**Resultado de la prueba local (2026-11-15, Docker Desktop, 8 CPU, `rerank: false` por defecto):**
+
+| Medición | Valor |
+|---|---|
+| Arranque hasta `/health` OK | 12 s |
+| Memoria en uso | unos 1,7 GB |
+| B / C (Q27) | 0,8 s / 1,8 s (con `rerank: true`, C tarda 9,9 s); el seguimiento sale del caché en 0,03 s |
+| Sin `X-API-Key` o con clave errónea | 401 · `top_k` en el request: 422 |
+
+**Resultado de la prueba local anterior (2026-11-09, LB-1 con rerank por defecto):**
 
 | Medición | Valor |
 |---|---|
