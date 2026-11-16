@@ -113,19 +113,43 @@ Un caso ilustrativo es **Q27**, las prácticas de hace 7 años, con el conflicto
 
 El detalle por pregunta, con la lista ordenada de artículos del contexto, está en `logs/recall_retrieve/Pruebas_Recall_Retrieve_LB1.xlsx` (una hoja por variante).
 
+## 5.1 Capa jerárquica de C (C sin rerank = sin rerank en las dos etapas)
+
+En `query.pipeline`, el parámetro `rerank` controla **las dos etapas** de C: el Top-5 base y la selección de artículos en las normas superiores (`search_superior`). Por eso «C sin rerank» es la arquitectura jerárquica completa sin reranker, y es la configuración publicada. Las métricas propias de la capa, en las 25 preguntas de jerarquía (los aportes y el ruido, en las 50), son:
+
+| Métrica de la capa jerárquica | C con rerank | C sin rerank |
+|---|---|---|
+| Norma de mayor rango en el contexto | 20 / 25 (0,80) | **24 / 25 (0,96)** |
+| … aportada por la capa jerárquica (no por la búsqueda base) | 7 / 25 | **13 / 25** |
+| Artículo de mayor rango en el contexto | **14 / 25 (0,56)** | 13 / 25 (0,52) |
+| Artículos agregados por la capa, por pregunta | 2,48 | 2,38 |
+| Aportes: artículos agregados que son fuente esperada (50 preguntas) | 6, en 6 preguntas | 6, en 6 preguntas |
+| Artículos agregados que no son fuente esperada | 118 | 113 |
+| Tiempo de la etapa jerárquica | 5,0 s | **0,8 s** |
+
+Por pregunta:
+- **Norma de mayor rango:** el rerank no gana en ninguna y pierde en 4 (Q25, Q31, Q44 y Q45).
+- **Artículo de mayor rango:** el rerank gana en 3 (Q27, Q35 y Q40) y pierde en 2 (Q25 y Q45). Neto: +1 pregunta a favor del rerank.
+- **Aportes esperados:** coinciden en Q34, Q37 y Q46. Con rerank, la capa aporta además en Q35, Q40 y Q43; sin rerank, en Q32, Q38 y Q45.
+
+**Conclusión para la jerarquía sin reranker:** C sin rerank cumple **mejor** su objetivo principal: lleva la norma superior al contexto en 24 de 25 preguntas, frente a 20, y la propia capa la aporta en 13, frente a 7. Lo hace con el mismo ruido y unas 6 veces más rápido. La única ventaja del rerank es elegir el artículo concreto de mayor rango, con un neto de una pregunta (14 frente a 13), lo que no compensa las 4 normas superiores que pierde.
+
+Hay un efecto de confusión: entre las dos variantes cambia también la etapa base, y la capa jerárquica sube desde las normas que trae esa base. Por eso estas cifras comparan **configuraciones completas**, y no aíslan el efecto del rerank dentro de la capa. Ese efecto aislado es lo que mediría la variante mixta (base sin rerank y capa jerárquica con rerank).
+
 ## 6. Análisis
 
 1. **El rerank empeora el orden más de lo que mejora.** En Recall@3 pierde en 11 preguntas y gana en 4, y en RR pierde en 18 y gana en 8–9. El patrón es igual en B y en C, porque la etapa base es la misma.
 2. **El contexto final casi no cambia.** Las dos variantes eligen sus 5 artículos base entre los mismos 20 candidatos, y el recall de fuentes en el contexto difiere en 0,01. El rerank cambia sobre todo **en qué posición** entra lo pertinente, no **si** entra.
 3. **El límite está antes del rerank.** El techo de candidatos (0,78; 0,68 en jerarquía) es igual en las cuatro variantes. Ningún reordenamiento recupera lo que la búsqueda híbrida no trajo. El diagnóstico posterior (`Diagnostico_Fuentes_Perdidas.md`, rama `mejoras-recuperacion`) atribuye esas pérdidas a la representación: lenguaje coloquial frente a normativo, fragmentos sin el nombre de la norma y tablas de EXT09.
-4. **El rerank aporta algo solo en la parte jerárquica:** el artículo de mayor rango en C (0,56 frente a 0,52) y Recall@5 en el estrato de jerarquía. Es coherente con un reranker de propósito general que reconoce mejor un artículo cuando ya está restringido a la norma superior.
+4. **El rerank aporta poco incluso en la parte jerárquica.** Gana en el artículo exacto de mayor rango, pero solo por una pregunta (14 frente a 13), y en Recall@5 del estrato de jerarquía. A cambio pierde 4 normas superiores (sección 5.1). Es coherente con un reranker de propósito general: reconoce algo mejor un artículo cuando la búsqueda ya está restringida a la norma superior, pero no ayuda a elegir qué traer.
 5. **El costo es grande y seguro; el beneficio, nulo o negativo.** Con rerank, B tarda 6,6 veces más y C 6,3 veces más. En CPU, C pasa de 1,5 s a 9,2 s por consulta, con picos de 12,9 s.
 6. **Por qué un cross-encoder general puede no ayudar aquí:** `bge-reranker-base` no está ajustado al dominio jurídico ni al español normativo. Además, la fusión RRF ya combina dos señales complementarias (léxica y semántica). Es una explicación posible, no verificada en esta prueba.
 
 ## 7. Decisión
 
 - **Etapa base (B y C): sin rerank.** No mejora en ninguna métrica, empeora el orden y cuesta unas 6 veces más tiempo. Se aplicó en el servicio `/retrieve` (`rerank: false` por defecto, commit `4ecff2b` de `rag-istae-query`) y es lo que está publicado en Hugging Face Spaces. El request todavía puede pedir `rerank: true`.
-- **Etapa jerárquica de C: decisión abierta.** Hay un indicio a favor (artículo de mayor rango 0,56 frente a 0,52). Siguiendo el criterio acordado, falta probar la variante **rerank solo en la capa jerárquica** antes de cerrar esa parte.
+- **Arquitectura C completa: sin rerank en las dos etapas** (sección 5.1). Lleva la norma superior en 24 de 25 preguntas, frente a 20 con rerank, con el mismo ruido y en 1,5 s frente a 9,2 s. Es la configuración publicada.
+- **Ajuste fino pendiente, no bloqueante:** probar la variante mixta, con la base sin rerank y la capa jerárquica con rerank. Mediría si el rerank, aplicado solo a la capa, recupera el artículo exacto de mayor rango (Q27, Q35, Q40) sin perder las normas superiores que hoy trae C sin rerank. Requiere separar el parámetro `rerank` por etapa en `query.pipeline`.
 - **Reproducibilidad de LB-1:** `query_rag.py` conserva `--rerank` por defecto, para reproducir la línea base tal como se definió.
 
 ## 8. Limitaciones y condiciones para reabrir la decisión
