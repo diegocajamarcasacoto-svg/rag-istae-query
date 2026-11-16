@@ -259,7 +259,7 @@ Errores observados de LB-1, todavía sin variante:
 - unas 6 veces más rápido (C: 1,5 s frente a 9,2 s);
 - el contexto final, prácticamente igual.
 
-El detalle está en `logs/recall_retrieve/` y en la rama `mejoras-recuperacion`. `query_rag.py` conserva `--rerank` por defecto, para reproducir LB-1 tal como se definió. La prueba siguió este diseño, acordado antes de ejecutarla: un solo factor (con o sin rerank, mismos 20 candidatos), medida a nivel de **artículos** sobre la salida real de B y de C, sin LLM. Se planificó con las 30 preguntas validadas y se ejecutó con las 50 del Gold Standard v4:
+El informe completo está en [`Resultados_Prueba_Rerank.md`](Resultados_Prueba_Rerank.md): diseño, resultados por estrato, por tipo y por pregunta, comparación pareada, decisión y limitaciones. Los datos están en `logs/recall_retrieve/`. `query_rag.py` conserva `--rerank` por defecto, para reproducir LB-1 tal como se definió. La prueba siguió este diseño, acordado antes de ejecutarla: un solo factor (con o sin rerank, mismos 20 candidatos), medida a nivel de **artículos** sobre la salida real de B y de C, sin LLM. Se planificó con las 30 preguntas validadas y se ejecutó con las 50 del Gold Standard v4:
 - por pregunta: artículos esperados presentes en el contexto (recall), artículos pertinentes / artículos enviados (precisión), posición del primer artículo pertinente, tokens del contexto y tiempo de rerank;
 - en C, además, cuántos artículos agregados por la capa jerárquica son esperados y cuántos son ruido (la capa jerárquica tiene su propio rerank, una segunda etapa);
 - criterio: quitar el rerank si no mejora; mantenerlo si mejora de forma consistente; si solo mejora una etapa (p. ej. la jerárquica), mantenerlo solo en esa etapa como variante explícita.
